@@ -332,45 +332,25 @@ const IO = Module("io", {
         this._lastRunCommand = ""; // updated whenever the users runs a command with :!
         this._scriptNames = [];
 
-        if (services.get("vc").compare(VERSION, "26.0a1") < 0) {
-            this.downloadListener = {
-                onDownloadStateChange: function (state, download) {
-                    if (download.state == services.get("downloads").DOWNLOAD_FINISHED) {
-                        let url   = download.source.spec;
-                        let title = download.displayName;
-                        let file  = download.targetFile.path;
-                        let size  = download.size;
-
-                        liberator.echomsg("Download of " + title + " to " + file + " finished");
-                        autocommands.trigger("DownloadPost", { url: url, title: title, file: file, size: size });
-                    }
-                },
-                onStateChange:    function () {},
-                onProgressChange: function () {},
-                onSecurityChange: function () {}
-            };
-            services.get("downloads").addListener(this.downloadListener);
-        } else {
-            let downloadListener = this.downloadListener = {
-                onDownloadChanged: function (download) {
-                    if (download.succeeded) {
-                        let {
-                            source: { url },
-                            target: {path: file},
-                            totalBytes: size,
-                        } = download;
-                        let title = File(file).leafName;
-                        liberator.echomsg("Download of " + title + " to " + file + " finished");
-                        autocommands.trigger("DownloadPost", { url: url, title: title, file: file, size: size });
-                    }
-                },
-            };
-            let {Downloads} = Cu.import("resource://gre/modules/Downloads.jsm", {});
-            Downloads.getList(Downloads.ALL)
-                .then(function (downloadList) {
-                    downloadList.addView(downloadListener);
-                });
-        }
+        let downloadListener = this.downloadListener = {
+            onDownloadChanged: function (download) {
+                if (download.succeeded) {
+                    let {
+                        source: { url },
+                        target: {path: file},
+                        totalBytes: size,
+                    } = download;
+                    let title = File(file).leafName;
+                    liberator.echomsg("Download of " + title + " to " + file + " finished");
+                    autocommands.trigger("DownloadPost", { url: url, title: title, file: file, size: size });
+                }
+            },
+        };
+        let {Downloads} = Cu.import("resource://gre/modules/Downloads.jsm", {});
+        Downloads.getList(Downloads.ALL)
+            .then(function (downloadList) {
+                downloadList.addView(downloadListener);
+            });
     },
 
     destroy: function () {
