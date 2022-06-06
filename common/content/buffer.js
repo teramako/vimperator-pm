@@ -1460,24 +1460,6 @@ const Buffer = Module("buffer", {
                 context.title = ["Buffers"];
                 context.completions = Array.from(generateTabs(tabs || config.tabbrowser.visibleTabs));
             }
-
-            if (!liberator.has("tabgroup") || !tabGroup.TV)
-                return;
-
-            let groups = tabGroup.tabView.GroupItems;
-            if (flags & this.buffer.GROUPS) {
-                let activeGroup = groups.getActiveGroupItem();
-                let activeGroupId = activeGroup === null ? null : activeGroup.id;
-                for (let group of groups.groupItems) {
-                    if (group.id != activeGroupId) {
-                        let groupName = group.getTitle();
-                        context.fork("GROUP_" + group.id, 0, this, function (context) {
-                            context.title = [groupName || UNTITLED_LABEL];
-                            context.completions = Array.from(generateGroupList(group, groupName));
-                        });
-                    }
-                }
-            }
         };
         completion.buffer.ALL = 1 << 0 | 1 << 1 | 1 << 2;
         completion.buffer.VISIBLE = 1 << 0;

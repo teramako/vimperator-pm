@@ -406,19 +406,6 @@ const Tabs = Module("tabs", {
         let matches = buffer.match(/^(\d+):?/);
         if (matches)
             return [tabs.getTab(parseInt(matches[1], 10) - 1)];
-        else if (liberator.has("tabgroup") && tabGroup.TV) {
-            matches = buffer.match(/^(.+?)\.(\d+):?/);
-            if (matches) {
-                let [, groupName, tabNum] = matches;
-                tabNum = parseInt(tabNum, 10);
-                let group = tabGroup.getGroup(groupName);
-                if (group) {
-                    let tabItem = group.getChild(tabNum - 1);
-                    if (tabItem)
-                        return [tabItem.tab];
-                }
-            }
-        }
 
         matches = [];
         let lowerBuffer = buffer.toLowerCase();
@@ -1176,6 +1163,20 @@ const Tabs = Module("tabs", {
                         else
                             styles.removeSheet(true, "tabnumbers");
                         return value;
+                    }
+                });
+
+            options.add(["apptab", "app"],
+                "Pin the current tab as App Tab",
+                "boolean", false,
+                {
+                    scope: Option.SCOPE_LOCAL,
+                    setter: function (value) {
+                        config.tabbrowser[value ? "pinTab" : "unpinTab"](tabs.getTab());
+                        return value;
+                    },
+                    getter: function () {
+                        return tabs.getTab().pinned;
                     }
                 });
         }

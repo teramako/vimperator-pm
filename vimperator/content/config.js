@@ -12,7 +12,7 @@ var Config = Module("config", ConfigBase, {
     /*** required options, no checks done if they really exist, so be careful ***/
     name: "Vimperator",
     hostApplication: "Firefox",
-    features: new Set(["bookmarks", "hints", "history", "marks", "quickmarks", "sanitizer", "session", "tabs", "tabs_undo", "windows", "tabgroup", "privatebrowsing"]),
+    features: new Set(["bookmarks", "hints", "history", "marks", "quickmarks", "sanitizer", "session", "tabs", "tabs_undo", "windows", "privatebrowsing"]),
 
     /*** optional options, there are checked for existence and a fallback provided  ***/
 
@@ -114,7 +114,6 @@ var Config = Module("config", ConfigBase, {
         "quickmarks.js",
         "sanitizer.js",
         "tabs.js",
-        "tabgroup.js",
     ],
 
     styleableChrome: ["chrome://browser/content/browser.xul"],
