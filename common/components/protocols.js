@@ -35,7 +35,7 @@ function makeChannel(url, orig) {
     if (typeof url == "function")
         url = dataURL.apply(null, url());
     let uri = ioService.newURI(url, null, null);
-    let channel = ioService.newChannelFromURI(uri);
+    let channel = ioService.newChannelFromURI2(uri, null, null, null, Ci.nsILoadInfo.SEC_SANDBOXED, Ci.nsIContentPolicy.TYPE_OTHER);
     channel.owner = systemPrincipal;
     channel.originalURI = orig;
     return channel;

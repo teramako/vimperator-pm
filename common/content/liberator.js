@@ -540,7 +540,8 @@ const Liberator = Module("liberator", {
 
         // XXX: util.httpGet is very heavy on startup. (Fx32)
         function httpGet(url) {
-            var channel = services.get("io").newChannelFromURI(makeURI(url));
+            const channel = services.get("io").newChannelFromURI2(
+                makeURI(url), null, null, null, Ci.nsILoadInfo.SEC_SANDBOXED, Ci.nsIContentPolicy.TYPE_OTHER);
             try {
                 var stream = channel.open();
             } catch (ex) {
