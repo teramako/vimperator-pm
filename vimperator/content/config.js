@@ -11,7 +11,7 @@ var Config = Module("config", ConfigBase, {
 
     /*** required options, no checks done if they really exist, so be careful ***/
     name: "Vimperator",
-    hostApplication: "Firefox",
+    hostApplication: "PaleMoon",
     features: new Set(["bookmarks", "hints", "history", "marks", "quickmarks", "sanitizer", "session", "tabs", "tabs_undo", "windows", "privatebrowsing"]),
 
     /*** optional options, there are checked for existence and a fallback provided  ***/
@@ -27,9 +27,9 @@ var Config = Module("config", ConfigBase, {
                    ["PluginsLoadPost",    "Triggered after all plugins have been (re)loaded"],
                    ["Sanitize",           "Triggered when a sanitizeable item is cleared"],
                    ["ShellCmdPost",       "Triggered after executing a shell command with :!cmd"],
-                   ["VimperatorEnter",    "Triggered after Firefox starts"],
-                   ["VimperatorLeavePre", "Triggered before exiting Firefox, just before destroying each module"],
-                   ["VimperatorLeave",    "Triggered before exiting Firefox"]],
+                   ["VimperatorEnter",    "Triggered after Pale Moon starts"],
+                   ["VimperatorLeavePre", "Triggered before exiting Pale Moon, just before destroying each module"],
+                   ["VimperatorLeave",    "Triggered before exiting Pane Moon"]],
 
     defaults: {
         complete: "sl",
@@ -37,7 +37,7 @@ var Config = Module("config", ConfigBase, {
     },
 
     dialogs: [
-        ["about",            "About Firefox",
+        ["about",            "About Pale Moon",
             function () { window.openDialog("chrome://browser/content/aboutDialog.xul", "_blank", "chrome,dialog,modal,centerscreen"); }],
         ["addbookmark",      "Add bookmark for the current page",
             function () { PlacesCommandHook.bookmarkCurrentPage(true, PlacesUtils.bookmarksRootId); }],
@@ -80,7 +80,7 @@ var Config = Module("config", ConfigBase, {
            function () { window.openDialog("chrome://passwordmgr/content/passwordManager.xul"); }],
         ["places",           "Places Organizer: Manage your bookmarks and history",
             function () { PlacesCommandHook.showPlacesOrganizer(ORGANIZER_ROOT_BOOKMARKS); }],
-        ["preferences",      "Show Firefox preferences dialog",
+        ["preferences",      "Show Pale Moon preferences dialog",
             function () {
                 var features = "chrome,titlebar,toolbar,centerscreen," +
                                (options.getPref("browser.preferences.instantApply", false) ? "dialog=no" : "modal");
@@ -160,7 +160,7 @@ var Config = Module("config", ConfigBase, {
         commands.add(["pref[erences]", "prefs"],
             "Show " + config.hostApplication + " preferences",
             function (args) {
-                if (args.bang) { // open Firefox settings GUI dialog
+                if (args.bang) { // open Pale Moon settings GUI dialog
                     liberator.open("about:config",
                         (options.newtab && options.get("newtab").has("all", "prefs"))
                                 ? liberator.NEW_TAB : liberator.CURRENT_TAB);
@@ -300,7 +300,7 @@ var Config = Module("config", ConfigBase, {
         };
 
         completion.addUrlCompleter("l",
-            "Firefox location bar entries (bookmarks and history sorted in an intelligent way)",
+            "Pale Moon location bar entries (bookmarks and history sorted in an intelligent way)",
             completion.location);
     },
     modes: function () {
