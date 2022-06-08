@@ -54,6 +54,8 @@ var Config = Module("config", ConfigBase, {
             function () { Cc["@mozilla.org/browser/browserglue;1"].getService(Ci.nsIBrowserGlue).sanitize(window || null); }],
         ["console",          "JavaScript console",
             function () { window.toJavaScriptConsole(); }],
+        ["browserconsole",   "Browser Console",
+            function () { Cu.import("resource://devtools/shared/Loader.jsm", {}).devtools.require("devtools/client/webconsole/hudservice").HUDService.openBrowserConsoleOrFocus(); }],
         ["cookies",          "List your cookies",
             function () { window.toOpenWindowByType("Browser:Cookies", "chrome://browser/content/preferences/cookies.xul", "chrome,dialog=no,resizable"); }],
         ["connectionprefs",  "Show connection settings",
