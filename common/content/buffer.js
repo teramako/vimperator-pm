@@ -1466,19 +1466,8 @@ const Buffer = Module("buffer", {
         completion.buffer.GROUPS  = 1 << 1;
     },
     events: function () {
-        let browserWindow;
-        if  (config.hostApplication == "Thunderbird") {
-            browserWindow = "MsgStatusFeedback";
-            let activityManager = Cc["@mozilla.org/activity-manager;1"].getService(Ci.nsIActivityManager);
-            activityManager.removeListener(window.MsgStatusFeedback);
-            this.progressListener = update(Object.create(window.MsgStatusFeedback), this.progressListener);
-            statusFeedback.setWrappedStatusFeedback(this.progressListener);
-            activityManager.addListener(this.progressListener);
-        } else {
-            browserWindow = "XULBrowserWindow";
-            this.progressListener = update(Object.create(window.XULBrowserWindow), this.progressListener);
-        }
-        window[browserWindow] = this.progressListener;
+        this.progressListener = update(Object.create(window.XULBrowserWindow), this.progressListener);
+        window.XULBrowserWindow = this.progressListener;
         window.QueryInterface(Ci.nsIInterfaceRequestor)
               .getInterface(Ci.nsIWebNavigation)
               .QueryInterface(Ci.nsIDocShellTreeItem)
@@ -1487,10 +1476,7 @@ const Buffer = Module("buffer", {
               .getInterface(Ci.nsIXULWindow)
               .XULBrowserWindow = this.progressListener;
 
-        try {
-            config.browser.addProgressListener(this.progressListener);
-        }
-        catch (e) {} // Why? --djk
+        config.browser.addProgressListener(this.progressListener);
 
         let appContent = document.getElementById("appcontent");
         if (appContent) {

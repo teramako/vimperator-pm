@@ -213,28 +213,20 @@ const Tabs = Module("tabs", {
     // FIXME: what is quitOnLastTab {1,2} all about then, eh? --djk
     remove: function (tab, count, orientation, forceQuitOnLastTab, force) {
         let vTabs = config.tabbrowser.visibleTabs;
-        let removeOrBlankTab = {
-                Firefox: function (tab) {
-                    if (vTabs.length > 1)
-                        config.tabbrowser.removeTab(tab);
-                    else {
-                        let url = buffer.URL;
-                        if (url != "about:blank" || url != "about:newtab" ||
-                            window.getWebNavigation().sessionHistory.count > 0) {
-                            liberator.open("", liberator.NEW_BACKGROUND_TAB);
-                            config.tabbrowser.removeTab(tab);
-                        }
-                        else
-                            liberator.beep();
-                    }
-                },
-                Thunderbird: function (tab) {
-                    if (config.tabbrowser.mTabs.length > 1 && !tab.hasAttribute("first-tab"))
-                        config.tabbrowser.closeTab(tab);
-                    else
-                        liberator.beep();
-                },
-            }[config.hostApplication] || function () {};
+        let removeOrBlankTab = function (tab) {
+            if (vTabs.length > 1)
+                config.tabbrowser.removeTab(tab);
+            else {
+                let url = buffer.URL;
+                if (url != "about:blank" || url != "about:newtab" ||
+                    window.getWebNavigation().sessionHistory.count > 0) {
+                    liberator.open("", liberator.NEW_BACKGROUND_TAB);
+                    config.tabbrowser.removeTab(tab);
+                }
+                else
+                    liberator.beep();
+            }
+        };
 
         if (typeof count != "number" || count < 1)
             count = 1;
@@ -591,10 +583,7 @@ const Tabs = Module("tabs", {
         else if (position < 0)
             position = wrap ? ((position % length) + length) % length : 0;
 
-        if (config.hostApplication === "Firefox")
-            return tabs[position]._tPos;
-
-        return position;
+        return tabs[position]._tPos;
     }
 }, {
     commands: function () {
