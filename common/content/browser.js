@@ -14,7 +14,7 @@
 const Browser = Module("browser", {
 }, {
     // TODO: support 'nrformats'? -> probably not worth it --mst
-    incrementURL: function (count) {
+    incrementURL(count) {
         let matches = buffer.URL.match(/(.*?)(\d+)(\D*)$/);
         liberator.assert(matches);
 
@@ -29,14 +29,14 @@ const Browser = Module("browser", {
         liberator.open(pre + newNumberStr + post);
     }
 }, {
-    options: function () {
+    options() {
         options.add(["encoding", "enc"],
             "Sets the current buffer's character encoding",
             "string", "UTF-8",
             {
                 scope: Option.SCOPE_LOCAL,
-                getter: function () config.browser.docShell.QueryInterface(Ci.nsIDocCharset).charset,
-                setter: function (val) {
+                getter () { return config.browser.docShell.QueryInterface(Ci.nsIDocCharset).charset; },
+                setter (val) {
                     if (options.encoding == val)
                         return val;
 
@@ -52,7 +52,7 @@ const Browser = Module("browser", {
                     catch (e) { liberator.echoerr(e); }
                     return null;
                 },
-                completer: function (context) completion.charset(context)
+                completer(context) { return completion.charset(context); }
             });
 
         options.add(["urlseparator"],
@@ -64,7 +64,7 @@ const Browser = Module("browser", {
             "boolean", false);
     },
 
-    mappings: function () {
+    mappings() {
         mappings.add([modes.NORMAL],
             ["y"], "Yank current location to the clipboard",
             function () {
@@ -219,7 +219,7 @@ const Browser = Module("browser", {
             });
     },
 
-    commands: function () {
+    commands() {
         commands.add(["downl[oads]", "dl"],
             "Show progress of current downloads",
             function () {
@@ -238,8 +238,8 @@ const Browser = Module("browser", {
                 else
                     liberator.open("");
             }, {
-                canonicalize: function (cmd) cmd.replace(/^(op?|open?)\b/, 'open'),
-                completer: function (context) completion.url(context),
+                canonicalize(cmd) { return cmd.replace(/^(op?|open?)\b/, 'open'); },
+                completer(context) { return completion.url(context); },
                 literal: 0,
                 privateData: true
             });
