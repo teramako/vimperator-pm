@@ -38,17 +38,17 @@
 const Command = Class("Command", {
     requires: ["config"],
 
-    init: function (specs, description, action, extraInfo) {
+    init(specs, description, action, extraInfo) {
         specs = Array.concat(specs); // XXX
         let parsedSpecs = Command.parseSpecs(specs);
-        if (!parsedSpecs.every(function (specs) specs.every(Command.validateName)))
+        if (!parsedSpecs.every(specs => specs.every(Command.validateName)))
             throw Error("Invalid command name");
 
         this.specs = specs;
-        this.shortNames = parsedSpecs.reduce(function(r,c){c[1]&&r.push(c[1]);return r;}, []);
-        this.longNames = parsedSpecs.map(function (n) n[0]);
+        this.shortNames = parsedSpecs.reduce((r,c) => {c[1]&&r.push(c[1]);return r;}, []);
+        this.longNames = parsedSpecs.map(n => n[0]);
         this.name = this.longNames[0];
-        this.names = parsedSpecs.reduce(function(r,c) r.concat(c), []);
+        this.names = parsedSpecs.reduce((r,c) => r.concat(c), []);
         this.description = description;
         this.action = action;
 
@@ -69,7 +69,7 @@ const Command = Class("Command", {
      * @deprecated
      * @param {Object} modifiers Any modifiers to be passed to {@link #action}.
      */
-    execute: function (args, bang, count, modifiers) {
+    execute(args, bang, count, modifiers) {
         // XXX
         bang = !!bang;
         count = (count === undefined) ? null : count;
@@ -105,7 +105,7 @@ const Command = Class("Command", {
      * @param {string} name The candidate name.
      * @returns {boolean}
      */
-    hasName: function (name) {
+    hasName(name) {
         for (let spec of this.specs) {
             let fullName = spec.replace(/\[(\w+)]$/, "$1");
             let index = spec.indexOf("[");
@@ -130,7 +130,7 @@ const Command = Class("Command", {
      * @returns {Args}
      * @see Commands#parseArgs
      */
-    parseArgs: function (args, complete, extra) commands.parseArgs(args, this.options, this.subCommands, this.argCount, false, this.literal, complete, extra),
+    parseArgs(args, complete, extra) { return commands.parseArgs(args, this.options, this.subCommands, this.argCount, false, this.literal, complete, extra); },
 
     /**
      * @property {string[]} All of this command's name specs. e.g., "com[mand]"
@@ -163,7 +163,7 @@ const Command = Class("Command", {
      * @property {function (string)} Transforms command line string to its
      * canonical form.
      */
-    canonicalize: function(cmd) {
+    canonicalize(cmd) {
         return cmd.replace(new RegExp('^(' + this.names.join('|') + ')\\b'), this.name);
     },
     /**
@@ -237,7 +237,7 @@ const Command = Class("Command", {
      *  @param {Array} specs An array of command name specs to parse.
      *  @returns {Array}
      */
-    parseSpecs: function parseSpecs(specs) {
+    parseSpecs(specs) {
         return specs.map(function (spec) {
             let [, head, tail] = spec.match(/([^[]+)(?:\[(.*)])?/);
             return tail ? [head + tail, head] : [head];
@@ -250,7 +250,7 @@ const Command = Class("Command", {
      * @param {string} command name
      * @returns {boolean}
      */
-    validateName: function (name) {
+    validateName(name) {
         return /^(!|[a-zA-Z][a-zA-Z\d]*)$/.test(name);
     }
 });
@@ -260,7 +260,7 @@ const Command = Class("Command", {
  */
 const ArgType = Struct("description", "parse");
 const Commands = Module("commands", {
-    init: function () {
+    init() {
         this._exCommands = [];
     },
 
@@ -320,16 +320,16 @@ const Commands = Module("commands", {
     COUNT_ALL: -2, // :%...
 
     /** @property {Iterator(Command)} @private */
-    __iterator__: function () {
-        let sorted = this._exCommands.sort(function (a, b) a.name > b.name);
+    __iterator__() {
+        let sorted = this._exCommands.sort((a, b) => a.name > b.name);
         return util.Array.itervalues(sorted);
     },
 
     /** @property {string} The last executed Ex command line. */
     repeat: null,
 
-    _addCommand: function (command, replace) {
-        if (this._exCommands.some(function (c) c.hasName(command.name))) {
+    _addCommand(command, replace) {
+        if (this._exCommands.some(c => c.hasName(command.name))) {
             if (command.user && replace)
                 commands.removeUserCommand(command.name);
             else {
@@ -355,7 +355,7 @@ const Commands = Module("commands", {
      * @optional
      * @returns {Command}
      */
-    add: function (names, description, action, extra) {
+    add(names, description, action, extra) {
         return this._addCommand(Command(names, description, action, extra), false);
     },
 
@@ -372,7 +372,7 @@ const Commands = Module("commands", {
      *     canonical name.
      * @returns {Command}
      */
-    addUserCommand: function (names, description, action, extra, replace) {
+    addUserCommand(names, description, action, extra, replace) {
         extra = extra || {};
         extra.user = true;
         description = description || "User defined command";
@@ -387,9 +387,9 @@ const Commands = Module("commands", {
      * @param {Object} args The command invocation object.
      * @returns {string}
      */
-    commandToString: function (args) {
+    commandToString(args) {
         let res = [args.command + (args.bang ? "!" : "")];
-        function quote(str) Commands.quoteArg[/[\s"'\\]|^$/.test(str) ? '"' : ""](str)
+        const quote = str => Commands.quoteArg[/[\s"'\\]|^$/.test(str) ? '"' : ""](str);
 
         for (let [opt, val] in Iterator(args.options || {})) {
             let chr = /^-.$/.test(opt) ? " " : "=";
@@ -413,8 +413,8 @@ const Commands = Module("commands", {
      *     any of the command's names.
      * @returns {Command}
      */
-    get: function (name) {
-        return this._exCommands.filter(function (cmd) cmd.hasName(name))[0] || null;
+    get(name) {
+        return this._exCommands.filter(cmd => cmd.hasName(name))[0] || null;
     },
 
     /**
@@ -424,8 +424,8 @@ const Commands = Module("commands", {
      *     any of the command's names.
      * @returns {Command}
      */
-    getUserCommand: function (name) {
-        return this._exCommands.filter(function (cmd) cmd.user && cmd.hasName(name))[0] || null;
+    getUserCommand(name) {
+        return this._exCommands.filter(cmd => cmd.user && cmd.hasName(name))[0] || null;
     },
 
     /**
@@ -433,8 +433,8 @@ const Commands = Module("commands", {
      *
      * @returns {Command[]}
      */
-    getUserCommands: function () {
-        return this._exCommands.filter(function (cmd) cmd.user);
+    getUserCommands() {
+        return this._exCommands.filter(cmd => cmd.user);
     },
 
     // TODO: should it handle comments?
@@ -507,7 +507,7 @@ const Commands = Module("commands", {
      *     Args object.
      * @returns {Args}
      */
-    parseArgs: function (str, options, subCommands, argCount, allowUnknownOptions, literal, complete, extra) {
+    parseArgs(str, options, subCommands, argCount, allowUnknownOptions, literal, complete, extra) {
         function getNextArg(str) {
             let [count, arg, quote] = Commands.parseArg(str);
             if (quote == "\\" && !complete)
@@ -530,7 +530,7 @@ const Commands = Module("commands", {
             extra = {};
 
         var args = [];       // parsed options
-        args.__iterator__ = function () util.Array.iteritems(this);
+        args.__iterator__ = function () { return util.Array.iteritems(this); };
         args.string = str;   // for access to the unparsed string
         args.literalArg = "";
 
@@ -601,7 +601,7 @@ const Commands = Module("commands", {
             if (complete)
                 resetCompletions();
 
-            var sub = str.substr(i);
+            var sub = str.substring(i);
             if ((!onlyArgumentsRemaining) && /^--(\s|$)/.test(sub)) {
                 onlyArgumentsRemaining = true;
                 i += 2;
@@ -619,7 +619,7 @@ const Commands = Module("commands", {
                             count = 0;
                             let sep = sub[optname.length];
                             if (sep == "=" || /\s/.test(sep) && opt[1] != this.OPTION_NOARG) {
-                                [count, arg, quote, error] = getNextArg(sub.substr(optname.length + 1));
+                                [count, arg, quote, error] = getNextArg(sub.substring(optname.length + 1));
                                 liberator.assert(!error, error);
 
                                 // if we add the argument to an option after a space, it MUST not be empty
@@ -735,7 +735,7 @@ const Commands = Module("commands", {
                                     subExtra.opts[opt[0][0]] = args[opt[0][0]];
                             }
                             // delegate parsing to the sub-command
-                            return subCmd.parseArgs(sub.substr(count), null, subExtra);
+                            return subCmd.parseArgs(sub.substring(count), null, subExtra);
                         }
                     }
                 }
@@ -817,7 +817,7 @@ const Commands = Module("commands", {
      * @returns {Array}
      */
     // FIXME: why does this return an Array rather than Object?
-    parseCommand: function (str) {
+    parseCommand(str) {
         // remove comments
         str.replace(/\s*".*$/, "");
 
@@ -839,10 +839,10 @@ const Commands = Module("commands", {
     },
 
     /** @property */
-    get complQuote() Commands.complQuote,
+    get complQuote() { return Commands.complQuote; },
 
     /** @property */
-    get quoteArg() Commands.quoteArg, // XXX: better somewhere else?
+    get quoteArg() { return Commands.quoteArg; }, // XXX: better somewhere else?
 
     /**
      * Remove the user-defined command with matching <b>name</b>.
@@ -850,8 +850,8 @@ const Commands = Module("commands", {
      * @param {string} name The name of the command to remove. This can be
      *     any of the command's names.
      */
-    removeUserCommand: function (name) {
-        this._exCommands = this._exCommands.filter(function (cmd) !(cmd.user && cmd.hasName(name)));
+    removeUserCommand(name) {
+        this._exCommands = this._exCommands.filter(cmd => !(cmd.user && cmd.hasName(name)));
     },
 
     // FIXME: still belong here? Also used for autocommand parameters.
@@ -868,7 +868,7 @@ const Commands = Module("commands", {
      *     values.
      * @returns {string}
      */
-    replaceTokens: function replaceTokens(str, tokens) {
+    replaceTokens(str, tokens) {
         return str.replace(/<((?:q-)?)([a-zA-Z]+)?>/g, function (match, quote, token) {
             if (token == "lt") // Don't quote, as in Vim (but, why so in Vim? You'd think people wouldn't say <q-lt> if they didn't want it)
                 return "<";
@@ -883,8 +883,11 @@ const Commands = Module("commands", {
 }, {
     QUOTE_STYLE: "rc-ish",
 
-    // returns [count, parsed_argument]
-    parseArg: function (str) {
+    /**
+     * @param {string} str argument string
+     * @returns {[number, string, string|null]} [count, parsed_argument]
+     */
+    parseArg(str) {
         let arg = "";
         let quote = null;
         let len = str.length;
@@ -904,7 +907,7 @@ const Commands = Module("commands", {
                 else if ((res = str.match(/^(")((?:[^\\"]|\\.)*)("?)/)))
                     arg += JSON.parse(res[0] + (res[3] ? "" : '"'));
                 else if ((res = str.match(/^(')((?:[^\\']|\\.)*)('?)/)))
-                    arg += res[2].replace(/\\(.)/g, function (n0, n1) /[\\']/.test(n1) ? n1 : n0);
+                    arg += res[2].replace(/\\(.)/g, (n0, n1) => /[\\']/.test(n1) ? n1 : n0);
                 break;
 
             case "rc-ish":
@@ -924,7 +927,7 @@ const Commands = Module("commands", {
                 else if ((res = str.match(/^(")((?:[^\\"]|\\.)*)("?)/)))
                     arg += JSON.parse(res[0] + (res[3] ? "" : '"'));
                 else if ((res = str.match(/^(')((?:[^\\']|\\.)*)('?)/)))
-                    arg += res[2].replace(/\\(.)/g, function (n0, n1) /[\\']/.test(n1) ? n1 : n0);
+                    arg += res[2].replace(/\\(.)/g, (n0, n1) => /[\\']/.test(n1) ? n1 : n0);
                 break;
             }
 
@@ -934,13 +937,13 @@ const Commands = Module("commands", {
                 quote = res[1];
             if (!res[1])
                 quote = res[3];
-            str = str.substr(res[0].length);
+            str = str.substring(res[0].length);
         }
 
         return [len - str.length, arg, quote];
     }
 }, {
-    mappings: function () {
+    mappings() {
         mappings.add(config.browserModes,
             ["@:"], "Repeat the last Ex command",
             function (count) {
@@ -954,8 +957,8 @@ const Commands = Module("commands", {
             { count: true });
     },
 
-    completion: function () {
-        JavaScript.setCompleter(this.get, [function () iter(Array.from(iter(commands)).map(c => [c.name, c.description]))]);
+    completion() {
+        JavaScript.setCompleter(this.get, [() => iter(Array.from(iter(commands)).map(c => [c.name, c.description]))]);
 
         completion.command = function command(context, subCmds) {
             context.keys = { text: "longNames", description: "description" };
@@ -1025,7 +1028,7 @@ const Commands = Module("commands", {
         };
     },
 
-    commands: function () {
+    commands() {
         function userCommand(args, modifiers) {
             let tokens = {
                 args:  this.argCount && args.string,
@@ -1086,7 +1089,7 @@ const Commands = Module("commands", {
                             };
                         }
                         else
-                            completeFunc = function (context) completion[completeOptionMap[completeOpt]](context);
+                            completeFunc = function (context) { return completion[completeOptionMap[completeOpt]](context); };
                     }
 
                     let added = commands.addUserCommand([cmd],
@@ -1116,7 +1119,7 @@ const Commands = Module("commands", {
                     // TODO: using an array comprehension here generates flakey results across repeated calls
                     //     : perhaps we shouldn't allow options in a list call but just ignore them for now
                     //     : No, array comprehensions are fine, generator statements aren't. --Kris
-                    let cmds = commands._exCommands.filter(function (c) c.user && (!cmd || c.name.match("^" + cmd)));
+                    let cmds = commands._exCommands.filter(c => c.user && (!cmd || c.name.match("^" + cmd)));
 
                     if (cmds.length > 0) {
                         let str = template.tabular(["", "Name", "Args", "Range", "Complete", "Definition"],
@@ -1137,7 +1140,7 @@ const Commands = Module("commands", {
                 }
             }, {
                 bang: true,
-                completer: function (context, args) {
+                completer(context, args) {
                     if (args.completeArg == 0)
                         completion.userCommand(context);
                     else
@@ -1145,7 +1148,7 @@ const Commands = Module("commands", {
                 },
                 options: [
                     [["-nargs"], commands.OPTION_STRING,
-                    function (arg) /^[01*?+]$/.test(arg),
+                    arg => /^[01*?+]$/.test(arg),
                     [["0", "No arguments are allowed (default)"],
                      ["1", "One argument is allowed"],
                      ["*", "Zero or more arguments are allowed"],
@@ -1155,11 +1158,11 @@ const Commands = Module("commands", {
                     [["-count"], commands.OPTION_NOARG],
                     [["-description"], commands.OPTION_STRING],
                     [["-complete"], commands.OPTION_STRING,
-                         function (arg) arg in completeOptionMap || /custom,\w+/.test(arg),
-                         function (context) Object.keys(completeOptionMap).map(k => [k, ""])]
+                         arg => arg in completeOptionMap || /custom,\w+/.test(arg),
+                         context => Object.keys(completeOptionMap).map(k => [k, ""])]
                 ],
                 literal: 1,
-                serial: function() {
+                serial() {
                     return commands._exCommands
                         .filter(cmd => cmd.user && cmd.replacementText)
                         .map(cmd => ({
@@ -1203,7 +1206,7 @@ const Commands = Module("commands", {
                     liberator.echoerr("No such user-defined command: " + name);
             }, {
                 argCount: "1",
-                completer: function (context) completion.userCommand(context)
+                completer(context) { return completion.userCommand(context); }
             });
     }
 });
@@ -1221,10 +1224,11 @@ const Commands = Module("commands", {
     };
     function quote(q, list) {
         let re = RegExp("[" + list + "]", "g");
-        return function (str) q + String.replace(str, re, function ($0) $0 in Commands.quoteMap ? Commands.quoteMap[$0] : ("\\" + $0)) + q;
+        return str => q + String.replace(str, re, $0 => $0 in Commands.quoteMap ? Commands.quoteMap[$0] : ("\\" + $0)) + q;
     }
-    function vimSingleQuote(s)
-        s.replace(/'/g, "''")
+    function vimSingleQuote(s) {
+        return s.replace(/'/g, "''");
+    }
     Commands.complQuote = { // FIXME
         '"': ['"', quote("", '\n\t"\\\\'), '"'],
         "'": ["'", vimSingleQuote, "'"],
@@ -1245,12 +1249,12 @@ const Commands = Module("commands", {
     };
     Commands.argTypes = [
         null,
-        ArgType("no arg",  function (arg) !arg || null),
+        ArgType("no arg",  arg => !arg || null),
         ArgType("boolean", Commands.parseBool),
-        ArgType("string",  function (val) val),
+        ArgType("string",  val => val),
         ArgType("int",     parseInt),
         ArgType("float",   parseFloat),
-        ArgType("list",    function (arg) arg && arg.split(/\s*,\s*/))
+        ArgType("list",    arg => arg && arg.split(/\s*,\s*/))
     ];
 })();
 
