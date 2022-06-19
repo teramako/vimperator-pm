@@ -26,6 +26,7 @@ Highlights.prototype.CSS = `
     Number      color: blue;
     Object      color: maroon;
     String      color: green;
+    Symbol      color: blueviolet;
     Mapping     color: magenta;
 
     Key         font-weight: bold;

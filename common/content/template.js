@@ -120,6 +120,8 @@ const Template = Module("template", {
                 if (processStrings && false)
                     str = template.highlightFilter(str, "\n", function () xml`<span highlight="NonText">^J</span>`);
                 return xml`<span highlight="Object">${str}</span>`;
+            case "symbol":
+                return xml`<span highlight="Symbol">${str}</span>`;
             default:
                 return `<unknown type>`;
             }
