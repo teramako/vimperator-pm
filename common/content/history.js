@@ -6,11 +6,11 @@
 const History = Module("history", {
     requires: ["config"],
 
-    get format() bookmarks.format,
+    get format() { return bookmarks.format; },
 
-    get service() services.get("history"),
+    get service() { return services.get("history"); },
 
-    get: function get(filter, maxItems) {
+    get(filter, maxItems) {
         // no query parameters will get all history
         let query = services.get("history").getNewQuery();
         let options = services.get("history").getNewQueryOptions();
@@ -43,16 +43,16 @@ const History = Module("history", {
         let sh = window.getWebNavigation().sessionHistory;
         let obj = [];
         obj.index = sh.index;
-        obj.__iterator__ = function () util.Array.iteritems(this);
+        obj.__iterator__ = function () { return util.Array.iteritems(this); };
         for (let i in util.range(0, sh.count)) {
             obj[i] = { index: i, __proto__: sh.getEntryAtIndex(i, false) };
-            util.memoize(obj[i], "icon", function (obj) bookmarks.getFavicon(obj.URI));
+            util.memoize(obj[i], "icon", obj => bookmarks.getFavicon(obj.URI));
         }
         return obj;
     },
 
     // TODO: better names
-    stepTo: function stepTo(steps) {
+    stepTo(steps) {
         let start = 0;
         let end = window.getWebNavigation().sessionHistory.count - 1;
         let current = window.getWebNavigation().sessionHistory.index;
@@ -65,7 +65,7 @@ const History = Module("history", {
         }
     },
 
-    goToStart: function goToStart() {
+    goToStart() {
         let index = window.getWebNavigation().sessionHistory.index;
 
         if (index > 0)
@@ -75,7 +75,7 @@ const History = Module("history", {
 
     },
 
-    goToEnd: function goToEnd() {
+    goToEnd() {
         let sh = window.getWebNavigation().sessionHistory;
         let max = sh.count - 1;
 
@@ -87,7 +87,7 @@ const History = Module("history", {
     },
 
     // if openItems is true, open the matching history items in tabs rather than display
-    list: function list(filter, openItems, maxItems) {
+    list(filter, openItems, maxItems) {
         // FIXME: returning here doesn't make sense
         //   Why the hell doesn't it make sense? --Kris
         // See comment at bookmarks.list --djk
@@ -96,7 +96,7 @@ const History = Module("history", {
         let items = completion.runCompleter("history", filter, maxItems, null, null, CompletionContext.Filter.textAndDescription);
 
         if (items.length)
-            return liberator.open(items.map(function (i) i.url), liberator.NEW_TAB);
+            return liberator.open(items.map(i => i.url), liberator.NEW_TAB);
 
         if (filter.length > 0)
             liberator.echoerr("No matching history items for: " + filter);
@@ -106,7 +106,7 @@ const History = Module("history", {
     }
 }, {
 }, {
-    commands: function () {
+    commands() {
         commands.add(["ba[ck]"],
             "Go back in the browser history",
             function (args) {
@@ -133,14 +133,18 @@ const History = Module("history", {
             {
                 argCount: "?",
                 bang: true,
-                completer: function completer(context) {
+                completer(context) {
                     let sh = history.session;
 
                     context.anchored = false;
                     context.compare = CompletionContext.Sort.unsorted;
                     context.filters = [CompletionContext.Filter.textDescription];
                     context.completions = sh.slice(0, sh.index).reverse();
-                    context.keys = { text: function (item) (sh.index - item.index) + ": " + item.URI.spec, description: "title", icon: "icon" };
+                    context.keys = {
+                        text(item) { return (sh.index - item.index) + ": " + item.URI.spec; },
+                        description: "title",
+                        icon: "icon"
+                    };
                 },
                 count: true,
                 literal: 0
@@ -172,14 +176,18 @@ const History = Module("history", {
             {
                 argCount: "?",
                 bang: true,
-                completer: function completer(context) {
+                completer(context) {
                     let sh = history.session;
 
                     context.anchored = false;
                     context.compare = CompletionContext.Sort.unsorted;
                     context.filters = [CompletionContext.Filter.textDescription];
                     context.completions = sh.slice(sh.index + 1);
-                    context.keys = { text: function (item) (item.index - sh.index) + ": " + item.URI.spec, description: "title", icon: "icon" };
+                    context.keys = {
+                        text(item) { return (item.index - sh.index) + ": " + item.URI.spec; },
+                        description: "title",
+                        icon: "icon"
+                    };
                 },
                 count: true,
                 literal: 0
@@ -207,7 +215,7 @@ const History = Module("history", {
                     history.list(args.join(" "), args.bang, args["-max"] || 1000);
             }, {
                 bang: true,
-                completer: function (context, args) {
+                completer(context, args) {
                     context.filter = args.join(" ");
                     context.filters = [CompletionContext.Filter.textAndDescription];
                     context.quote = null;
@@ -217,7 +225,7 @@ const History = Module("history", {
                           [["-remove", "-r"], commands.OPTION_NOARG]]
             });
     },
-    completion: function () {
+    completion() {
         completion.history = function _history(context, maxItems) {
             context.format = history.format;
             context.title = ["History"];
@@ -225,12 +233,12 @@ const History = Module("history", {
             if (context.maxItems == null)
                 context.maxItems = 100;
             context.regenerate = true;
-            context.generate = function () history.get(context.filter, this.maxItems);
+            context.generate = function () { return history.get(context.filter, this.maxItems); };
         };
 
         completion.addUrlCompleter("h", "History", completion.history);
     },
-    mappings: function () {
+    mappings() {
         var myModes = config.browserModes;
 
         mappings.add(myModes,
