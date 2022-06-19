@@ -478,7 +478,7 @@ const Bookmarks = Module("bookmarks", {
         return node;
 
         function getFolderFromNode (node, title) {
-            for (let child in Bookmarks.iterateFolderChildren(node)) {
+            for (const child of Bookmarks.iterateFolderChildren(node)) {
                 if (child.title == title && child instanceof Ci.nsINavHistoryContainerResultNode) {
                     node.containerOpen = false;
                     return child;
@@ -814,7 +814,7 @@ const Bookmarks = Module("bookmarks", {
                 results.push(["TOOLBAR", "Bookmarks Toolbar"]);
             }
             if (folder) {
-                for (let child in Bookmarks.iterateFolderChildren(folder, onlyFolder, onlyWritable)) {
+                for (const child of Bookmarks.iterateFolderChildren(folder, onlyFolder, onlyWritable)) {
                     if (PlacesUtils.nodeIsSeparator(child))
                         continue;
 
