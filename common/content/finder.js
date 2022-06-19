@@ -26,7 +26,7 @@
 var Finder = Module("finder", {
     requires: ["config"],
 
-    init: function () {
+    init() {
         this._backwards = false;           // currently searching backwards
         this._searchPattern = "";          // current search string (includes modifiers)
         this._lastSearchPattern = "";      // the last searched pattern (includes modifiers)
@@ -41,7 +41,7 @@ var Finder = Module("finder", {
     },
 
     // set searchString, searchPattern, caseSensitive, linksOnly
-    _processUserPattern: function (pattern) {
+    _processUserPattern(pattern) {
         //// strip off pattern terminator and offset
         //if (backwards)
         //    pattern = pattern.replace(/\?.*/, "");
@@ -97,7 +97,7 @@ var Finder = Module("finder", {
      *     modes.SEARCH_BACKWARD.
      * @default modes.SEARCH_FORWARD
      */
-    openPrompt: function (mode) {
+    openPrompt(mode) {
         this._backwards = mode == modes.SEARCH_BACKWARD;
         //commandline.open(this._backwards ? "Find backwards" : "Find", "", mode);
         commandline.input(this._backwards ? "Find backwards" : "Find", this.closure.onSubmit, {
@@ -115,7 +115,7 @@ var Finder = Module("finder", {
     /**
      * Initialize some of the findbar's methods to play nice us.
      */
-    setupFindbar: function() {
+    setupFindbar() {
         let findbar = this.findbar;
         if (!findbar.vimperated) {
             findbar.vimperated = true;
@@ -154,7 +154,7 @@ var Finder = Module("finder", {
      *
      * @param {string} str The string to find.
      */
-    find: function (str) {
+    find(str) {
         this.setupFindbar();
         this._processUserPattern(str);
 
@@ -168,7 +168,7 @@ var Finder = Module("finder", {
      * @param {boolean} reverse Whether to search forwards or backwards.
      * @default false
      */
-    findAgain: function (reverse) {
+    findAgain(reverse) {
         // Nothing to find?
         if (!this._lastSearchPattern)
             return;
@@ -191,7 +191,7 @@ var Finder = Module("finder", {
      * Updates the status line with the result from the find operation;
      * this is done aSync from the main (input) process.
      */
-    onFindResult: function(aData) {
+    onFindResult(aData) {
         this.findbar._vimp_keepClosed = false;
         if (aData.result == Ci.nsITypeAheadFind.FIND_NOTFOUND) {
             // Don't use aData.searchString, it may be a substring of the
@@ -219,7 +219,7 @@ var Finder = Module("finder", {
      *     (@link #openPrompt).
      * @default false
      */
-    onSubmit: function (str, forcedBackward) {
+    onSubmit(str, forcedBackward) {
         let findbar = this.findbar;
 
         if (typeof forcedBackward === "boolean")
@@ -259,7 +259,7 @@ var Finder = Module("finder", {
     /**
      * Highlights all occurrences of <b>str</b> in the buffer.
      */
-    highlight: function () {
+    highlight() {
         this.setupFindbar();
         let findbar = this.findbar;
 
@@ -277,7 +277,7 @@ var Finder = Module("finder", {
     /**
      * Clears all search highlighting.
      */
-    clear: function () {
+    clear() {
         if (!this.findbarInitialized)
             return;
 
@@ -293,7 +293,7 @@ var Finder = Module("finder", {
     /**
      * Updates the case sensitivity parameter.
      */
-    updateCaseSensitive: function (cs) {
+    updateCaseSensitive(cs) {
         this.setupFindbar();
         let findbar = this.findbar;
         if (cs != findbar._typeAheadCaseSensitive) {
@@ -304,7 +304,7 @@ var Finder = Module("finder", {
     /**
      * Updates the find mode to show only matches in links or all matches.
      */
-    updateFindMode: function (fm) {
+    updateFindMode(fm) {
         this.setupFindbar();
         let findbar = this.findbar;
 
@@ -320,14 +320,14 @@ var Finder = Module("finder", {
     }
 }, {
 }, {
-    commands: function () {
+    commands() {
         // TODO: Remove in favor of :set nohlsearch?
         commands.add(["noh[lsearch]"],
             "Remove the search highlighting",
             function () { finder.clear(); },
             { argCount: "0" });
     },
-    mappings: function () {
+    mappings() {
         var myModes = config.browserModes;
         myModes = myModes.concat([modes.CARET]);
 
@@ -359,7 +359,7 @@ var Finder = Module("finder", {
                 finder.onSubmit(buffer.getCurrentWord(), true);
             });
     },
-    options: function () {
+    options() {
         options.add(["hlsearch", "hls"],
             "Highlight previous search pattern matches",
             "boolean", true, {
