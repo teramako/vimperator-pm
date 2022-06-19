@@ -582,7 +582,7 @@ const Liberator = Module("liberator", {
         // Find the tags in the document.
         function addTags(file, doc) {
             doc = XSLT.transformToDocument(doc);
-            for (let elem in util.evaluateXPath("//xhtml:a/@id", doc))
+            for (const elem of util.evaluateXPath("//xhtml:a/@id", doc))
                 tagMap[elem.value] = file;
         }
 

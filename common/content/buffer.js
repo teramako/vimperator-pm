@@ -63,9 +63,9 @@ const Buffer = Module("buffer", {
             }
 
             let nFeed = 0;
-            for (let link in util.evaluateXPath(["link[@href and (@rel='feed' or (@rel='alternate' and @type))]"], doc)) {
-                let rel = link.rel.toLowerCase();
-                let feed = { title: link.title, href: link.href, type: link.type || "" };
+            for (const link of util.evaluateXPath(["link[@href and (@rel='feed' or (@rel='alternate' and @type))]"], doc)) {
+                const rel = link.rel.toLowerCase();
+                const feed = { title: link.title, href: link.href, type: link.type || "" };
                 if (isValidFeed(feed, doc.nodePrincipal, rel == "feed")) {
                     nFeed++;
                     let type = feedTypes[feed.type] || "RSS";
@@ -1642,7 +1642,7 @@ const Buffer = Module("buffer", {
                                  "iframe"];
 
                     let elements = [];
-                    for (let m in util.evaluateXPath(xpath)) {
+                    for (const m of util.evaluateXPath(xpath)) {
                         if (m.getClientRects().length
                         && (!(m instanceof HTMLIFrameElement) || Editor.windowIsEditable(m.contentWindow)))
                             elements.push(m);

@@ -431,18 +431,18 @@ const Util = Module("util", {
             let xr = result;
 
             if (asIterator) {
-                result = { iterateNext: function iterateNext() xr.iterateNext()};
+                result = { iterateNext() { return xr.iterateNext(); } };
             } else {
                 result = {
-                    snapshotItem: function snapshotItem(num) xr.snapshotItem(num),
-                    get snapshotLength() xr.snapshotLength,
+                    snapshotItem(num) { return xr.snapshotItem(num); },
+                    get snapshotLength() { return xr.snapshotLength; },
                 };
             }
         }
 
-        result.__iterator__ = asIterator
-                            ? function () { let elem; while ((elem = this.iterateNext())) yield elem; }
-                            : function () { for (let i = 0; i < this.snapshotLength; i++) yield this.snapshotItem(i); };
+        result[Symbol.iterator] = asIterator
+            ? function* () { let elem; while ((elem = this.iterateNext())) yield elem; }
+            : function* () { for (let i = 0; i < this.snapshotLength; i++) yield this.snapshotItem(i); }
 
         return result;
     },
