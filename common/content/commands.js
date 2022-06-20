@@ -530,7 +530,6 @@ const Commands = Module("commands", {
             extra = {};
 
         var args = [];       // parsed options
-        args.__iterator__ = function () { return util.Array.iteritems(this); };
         args.string = str;   // for access to the unparsed string
         args.literalArg = "";
 

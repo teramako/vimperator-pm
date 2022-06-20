@@ -43,7 +43,6 @@ const History = Module("history", {
         let sh = window.getWebNavigation().sessionHistory;
         let obj = [];
         obj.index = sh.index;
-        obj.__iterator__ = function () { return util.Array.iteritems(this); };
         for (let i in util.range(0, sh.count)) {
             obj[i] = { index: i, __proto__: sh.getEntryAtIndex(i, false) };
             util.memoize(obj[i], "icon", obj => bookmarks.getFavicon(obj.URI));
