@@ -18,7 +18,7 @@ const AutoCommands = Module("autocommands", {
         this._store = [];
     },
 
-    __iterator__() { return util.Array.itervalues(this._store); },
+    *[Symbol.iterator]() { yield* this._store; },
 
     /**
      * Adds a new autocommand. <b>cmd</b> will be executed when one of the

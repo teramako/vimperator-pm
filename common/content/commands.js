@@ -319,10 +319,9 @@ const Commands = Module("commands", {
     // FIXME: this isn't a count at all
     COUNT_ALL: -2, // :%...
 
-    /** @property {Iterator(Command)} @private */
-    __iterator__() {
-        let sorted = this._exCommands.sort((a, b) => a.name > b.name);
-        return util.Array.itervalues(sorted);
+    /** @returns {Iterator<Command>} @private */
+    *[Symbol.iterator]() {
+        yield* this._exCommands.sort((a, b) => a.name > b.name);
     },
 
     /** @property {string} The last executed Ex command line. */
