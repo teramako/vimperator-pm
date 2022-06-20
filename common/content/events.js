@@ -79,10 +79,10 @@ const Events = Module("events", {
                 let dirs = io.getRuntimeDirectories("macros");
 
                 if (dirs.length > 0) {
-                    for (let dir of dirs) {
+                    for (const dir of dirs) {
                          liberator.log("Sourcing macros directory: " + dir.path);
 
-                        for (let file in dir.iterDirectory()) {
+                        for (const file of dir.iterDirectory()) {
                             if (file.exists() && !file.isDirectory() && file.isReadable() &&
                                 /^[\w_-]+(\.vimp)?$/i.test(file.leafName)) {
                                 let name = file.leafName.replace(/\.vimp$/i, "");
