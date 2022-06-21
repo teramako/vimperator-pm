@@ -956,7 +956,7 @@ const Commands = Module("commands", {
     },
 
     completion() {
-        JavaScript.setCompleter(this.get, [() => iter(Array.from(iter(commands)).map(c => [c.name, c.description]))]);
+        JavaScript.setCompleter(this.get, [() => iter(Array.from(commands, c => [c.name, c.description]))]);
 
         completion.command = function command(context, subCmds) {
             context.keys = { text: "longNames", description: "description" };
@@ -965,7 +965,7 @@ const Commands = Module("commands", {
                 context.completions = subCmds;
             } else {
                 context.title = ["Command"];
-                context.completions = Array.from(iter(commands));
+                context.completions = Array.from(commands);
             }
         };
 

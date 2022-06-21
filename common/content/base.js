@@ -22,9 +22,16 @@ function allkeys(obj) {
             yield prop;
 }
 
+/**
+ * iterate obj's keys and symbols
+ * @param {object} obj
+ * @returns {Iterator<string|symbol>}
+ */
 function keys(obj) {
     for (let prop of Object.getOwnPropertyNames(obj))
         yield prop;
+    for (let symbol of Object.getOwnPropertySymbols(obj))
+        yield symbol;
 }
 
 function values(obj) {
