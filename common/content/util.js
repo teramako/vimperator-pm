@@ -45,7 +45,7 @@
 let Encoder = Components.Constructor("@mozilla.org/layout/documentEncoder;1?type=text/plain", "nsIDocumentEncoder", "init");
 
 const Util = Module("util", {
-    init: function () {
+    init() {
         this.Array = Util.Array;
     },
 
@@ -55,7 +55,7 @@ const Util = Module("util", {
      * @param {Object} obj
      * @returns {Object}
      */
-    cloneObject: function cloneObject(obj) {
+    cloneObject(obj) {
         if (obj instanceof Array)
             return obj.slice();
         let newObj = {};
@@ -72,8 +72,8 @@ const Util = Module("util", {
      * @param {number} length The length of the returned string.
      * @returns {string}
      */
-    clip: function clip(str, length) {
-        return str.length <= length ? str : str.substr(0, length - 3) + "...";
+    clip(str, length) {
+        return str.length <= length ? str : str.substring(0, length - 3) + "...";
     },
 
     /**
@@ -84,7 +84,7 @@ const Util = Module("util", {
      * @param {string} b
      * @returns {number}
      */
-    compareIgnoreCase: function compareIgnoreCase(a, b) String.localeCompare(a.toLowerCase(), b.toLowerCase()),
+    compareIgnoreCase(a, b) { return String.localeCompare(a.toLowerCase(), b.toLowerCase()); },
 
     /**
      * Returns an object representing a Node's computed CSS style.
@@ -92,7 +92,7 @@ const Util = Module("util", {
      * @param {Node} node
      * @returns {Object}
      */
-    computedStyle: function computedStyle(node) {
+    computedStyle(node) {
         while ((node instanceof Text || node instanceof Comment) && node.parentNode)
             node = node.parentNode;
         return node.ownerDocument.defaultView.getComputedStyle(node, null);
@@ -105,7 +105,7 @@ const Util = Module("util", {
      * @param {string} str
      * @param {boolean} verbose
      */
-    copyToClipboard: function copyToClipboard(str, verbose) {
+    copyToClipboard(str, verbose) {
         const clipboardHelper = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
         clipboardHelper.copyString(str);
 
@@ -120,7 +120,7 @@ const Util = Module("util", {
      * @returns {Object}
      */
     // FIXME: newURI needed too?
-    createURI: function createURI(str) {
+    createURI(str) {
         const fixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
         return fixup.createFixupURI(str, fixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP);
     },
@@ -132,7 +132,7 @@ const Util = Module("util", {
      * @param {string} str
      * @returns {string}
      */
-    escapeHTML: function escapeHTML(str) {
+    escapeHTML(str) {
         // XXX: the following code is _much_ slower than a simple .replace()
         // :history display went down from 2 to 1 second after changing
         //
@@ -148,7 +148,7 @@ const Util = Module("util", {
      * @param {string} str
      * @returns {string}
      */
-    escapeRegex: function escapeRegex(str) {
+    escapeRegex(str) {
         return str.replace(/([\\{}()[\].?*+])/g, "\\$1");
     },
 
@@ -161,7 +161,7 @@ const Util = Module("util", {
      * @param {string} delimiter
      * @returns {string}
      */
-    escapeString: function escapeString(str, delimiter) {
+    escapeString(str, delimiter) {
         if (delimiter === undefined)
             delimiter = '"';
         return delimiter + str.replace(/([\\'"])/g, "\\$1").replace("\n", "\\n", "g").replace("\t", "\\t", "g") + delimiter;
@@ -175,9 +175,9 @@ const Util = Module("util", {
      * @param nodes {Array(string)}
      * @returns {string}
      */
-    makeXPath: function makeXPath(nodes) {
-        return util.Array(nodes).map(function (node) [node, "xhtml:" + node]).flatten()
-                                .map(function (node) "//" + node).join(" | ");
+    makeXPath(nodes) {
+        return util.Array(nodes).map(function (node) { return [node, "xhtml:" + node]; }).flatten()
+                                .map(function (node) { return "//" + node; }).join(" | ");
     },
 
     /**
@@ -190,7 +190,7 @@ const Util = Module("util", {
      *          passed as the first argument, <b>key</b> as the
      *          second.
      */
-    memoize: function memoize(obj, key, getter) {
+    memoize(obj, key, getter) {
         obj.__defineGetter__(key, function () {
             delete obj[key];
             obj[key] = getter(obj, key);
@@ -211,7 +211,7 @@ const Util = Module("util", {
      * @param {string} str
      * @param {RegExp} marker
      */
-    splitLiteral: function splitLiteral(str, marker) {
+    splitLiteral(str, marker) {
         let results = [];
         let resep = RegExp(/^(([^\\'"]|\\.|'([^\\']|\\.)*'|"([^\\"]|\\.)*")*?)/.source + marker.source);
         let cont = true;
@@ -241,7 +241,7 @@ const Util = Module("util", {
      * @param {boolean} humanReadable Use byte multiples.
      * @returns {string}
      */
-    formatBytes: function formatBytes(bytes, decimalPlaces, humanReadable) {
+    formatBytes(bytes, decimalPlaces, humanReadable) {
         const unitVal = ["Bytes", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"];
         let unitIndex = 0;
         let tmpNum = parseInt(bytes, 10) || 0;
@@ -273,7 +273,7 @@ const Util = Module("util", {
         return strNum[0] + " " + unitVal[unitIndex];
     },
 
-    exportHelp: function (path) {
+    exportHelp(path) {
         const FILE = io.File(path);
         const PATH = FILE.leafName.replace(/\..*/, "") + "/";
         const TIME = Date.now();
@@ -380,7 +380,7 @@ const Util = Module("util", {
      * @param {function(XMLHttpRequest)} callback
      * @returns {XMLHttpRequest}
      */
-    httpGet: function httpGet(url, callback) {
+    httpGet(url, callback) {
         try {
             let xmlhttp = new XMLHttpRequest();
             xmlhttp.mozBackgroundRequest = true;
@@ -413,7 +413,7 @@ const Util = Module("util", {
      * @param {boolean} asIterator Whether to return the results as an
      *     XPath iterator.
      */
-    evaluateXPath: function (expression, doc, elem, asIterator) {
+    evaluateXPath(expression, doc, elem, asIterator) {
         if (!doc)
             doc = window.content.document;
         if (!elem)
@@ -460,7 +460,7 @@ const Util = Module("util", {
      * @param {Object} k
      * @returns {Object}
      */
-    identity: function identity(k) k,
+    identity(k) { return k; },
 
     /**
      * Returns the intersection of two rectangles.
@@ -469,14 +469,16 @@ const Util = Module("util", {
      * @param {Object} r2
      * @returns {Object}
      */
-    intersection: function (r1, r2) ({
-        get width()  this.right - this.left,
-        get height() this.bottom - this.top,
-        left: Math.max(r1.left, r2.left),
-        right: Math.min(r1.right, r2.right),
-        top: Math.max(r1.top, r2.top),
-        bottom: Math.min(r1.bottom, r2.bottom)
-    }),
+    intersection(r1, r2) {
+        return ({
+            get width()  { return this.right - this.left; },
+            get height() { return this.bottom - this.top; },
+            left: Math.max(r1.left, r2.left),
+            right: Math.min(r1.right, r2.right),
+            top: Math.max(r1.top, r2.top),
+            bottom: Math.min(r1.bottom, r2.bottom)
+        });
+    },
 
     /**
      * Returns the array that results from applying <b>func</b> to each
@@ -486,7 +488,7 @@ const Util = Module("util", {
      * @param {function} func
      * @returns {Array}
      */
-    map: function map(obj, func) {
+    map(obj, func) {
         let ary = [];
         for (let i in Iterator(obj))
             ary.push(func(i));
@@ -507,7 +509,7 @@ const Util = Module("util", {
          * @param {number} max The maximum constraint.
          * @returns {number}
          */
-        constrain: function constrain(value, min, max) Math.min(Math.max(min, value), max)
+        constrain(value, min, max) { return Math.min(Math.max(min, value), max); }
     },
 
     /**
@@ -517,7 +519,7 @@ const Util = Module("util", {
      * @returns {nsIURI}
      */
     // FIXME: createURI needed too?
-    newURI: function (uri) {
+    newURI(uri) {
         return services.get("io").newURI(uri, null, null);
     },
 
@@ -529,7 +531,7 @@ const Util = Module("util", {
      * @param {boolean} color Whether the output should be colored.
      * @returns {string}
      */
-    objectToString: function objectToString(object, color) {
+    objectToString(object, color) {
         if (object === null)
             return "null\n";
 
@@ -554,7 +556,7 @@ const Util = Module("util", {
             try {
                 let tag = xml`${`<${namespaced(elem)} `}${
                     template.map2(xml, elem.attributes,
-                        function (a) xml`${namespaced(a)}=${template.highlight(a.value, true)}`, " ")}${
+                        a => xml`${namespaced(a)}=${template.highlight(a.value, true)}`, " ")}${
                     !elem.firstChild || /^\s*$/.test(elem.firstChild) && !elem.firstChild.nextSibling
                         ? "/>" : `>...</${namespaced(elem)}>`}`;
                 return tag;
@@ -570,7 +572,7 @@ const Util = Module("util", {
         catch (e) {
             obj = "[Object]";
         }
-        obj = template.highlightFilter(util.clip(obj, 150), "\n", !color ? function () "^J" : function () xml`<span highlight="NonText">^J</span>`);
+        obj = template.highlightFilter(util.clip(obj, 150), "\n", !color ? (() => "^J") : (() => xml`<span highlight="NonText">^J</span>`));
         let string = xml`<span highlight="Title Object">${obj}</span>::<br/>&#xa;`;
 
         let keys = [];
@@ -609,7 +611,7 @@ const Util = Module("util", {
                 return a[0] - b[0];
             return String.localeCompare(a[0], b[0]);
         }
-        xml["+="](string, template.map2(xml, keys.sort(compare), function (f) f[1]));
+        xml["+="](string, template.map2(xml, keys.sort(compare), function (f) { return f[1]; }));
         return string;
     },
 
@@ -664,7 +666,7 @@ const Util = Module("util", {
      *
      * @returns {string}
      */
-    readFromClipboard: function readFromClipboard() {
+    readFromClipboard() {
         let str;
 
         try {
@@ -702,7 +704,7 @@ const Util = Module("util", {
      * @param {string} str
      * @returns {string[]}
      */
-    stringToURLArray: function stringToURLArray(str) {
+    stringToURLArray(str) {
         let urls;
 
         if (options.urlseparator)
@@ -751,7 +753,7 @@ const Util = Module("util", {
 
             // Hmm. No defsearch? Let the host app deal with it, then.
             return url;
-        }).filter(function(url, i) i === 0 || url);
+        }).filter((url, i) => i === 0 || url);
     },
 
     /**
@@ -763,7 +765,7 @@ const Util = Module("util", {
      *     stored here, keyed to the value thereof.
      * @returns {Node|DocumentFragment}
      */
-    xmlToDom: function xmlToDom(node, doc, nodes) {
+    xmlToDom(node, doc, nodes) {
         var dom = this.xmlToDomForTemplate(node, doc, nodes);
 
         //xxx: change highlight's namespace
@@ -786,7 +788,7 @@ const Util = Module("util", {
      * @returns {Node|DocumentFragment}
      * @see util.xmlToDom
      */
-    xmlToDomForTemplate: function xmlToDomForTemplate(node, doc, nodes) {
+    xmlToDomForTemplate(node, doc, nodes) {
         var range = doc.createRange();
         var fragment = range.createContextualFragment(
             xml`<div xmlns:ns=${NS} xmlns:xul=${XUL} xmlns=${XHTML}>${node}</div>`.toString());
@@ -810,7 +812,7 @@ const Util = Module("util", {
      * @param {Number} flags    nsIDocumentEncoder.OutputXXXX
      * @returns {String}
      */
-    domToStr: function domToStr(node, type, flags) {
+    domToStr(node, type, flags) {
         var doc, method;
 
         if (node instanceof Document) {
@@ -853,7 +855,7 @@ const Util = Module("util", {
         init: function (ary) {
             return {
                 __proto__: ary,
-                __iterator__: function () this.iteritems(),
+                __iterator__: function () { return this.iteritems(); },
                 mapImpl: function (meth, args) {
                     var res = util.Array[meth].apply(null, [this.__proto__].concat(args));
 
@@ -861,14 +863,14 @@ const Util = Module("util", {
                         return util.Array(res);
                     return res;
                 },
-                toString: function () this.__proto__.toString(),
-                concat: function () this.__proto__.concat.apply(this.__proto__, arguments),
-                map: function () this.mapImpl("map", Array.slice(arguments)),
-                flatten: function () this.mapImpl("flatten", arguments)
+                toString: function () { return this.__proto__.toString(); },
+                concat: function () { return this.__proto__.concat.apply(this.__proto__, arguments); },
+                map: function () { return this.mapImpl("map", Array.slice(arguments)); },
+                flatten: function () { return this.mapImpl("flatten", arguments); }
             };
         }
     }, {
-        isinstance: function isinstance(obj) {
+        isinstance(obj) {
             return Object.prototype.toString.call(obj) === "[object Array]";
         },
 
@@ -882,7 +884,7 @@ const Util = Module("util", {
          * @... {string} 0 - Key
          * @...          1 - Value
          */
-        toObject: function toObject(assoc) {
+        toObject(assoc) {
             let obj = {};
             assoc.forEach(function ([k, v]) { obj[k] = v; });
             return obj;
@@ -895,7 +897,7 @@ const Util = Module("util", {
          * @param {Array} ary
          * @returns {Array}
          */
-        compact: function compact(ary) ary.filter(function (item) item != null),
+        compact(ary) { return ary.filter(item => item != null); },
 
         /**
          * Flattens an array, such that all elements of the array are
@@ -905,7 +907,7 @@ const Util = Module("util", {
          * @param {Array} ary
          * @returns {Array}
          */
-        flatten: function flatten(ary) Array.prototype.concat.apply([], ary),
+        flatten(ary) { return Array.prototype.concat.apply([], ary); },
 
         /**
          * Returns an Iterator for an array's values.
@@ -940,7 +942,7 @@ const Util = Module("util", {
          * @param {boolean} unsorted
          * @returns {Array}
          */
-        uniq: function uniq(ary, unsorted) [...new Set(unsorted ? ary : ary.sort())],
+        uniq(ary, unsorted) { return [...new Set(unsorted ? ary : ary.sort())]; },
     })
 });
 
