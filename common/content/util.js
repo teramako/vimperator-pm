@@ -6,11 +6,18 @@
 /** @scope modules */
 
 (function () {
-    function Namespace(prefix, uri) {
-        this.prefix = prefix;
-        this.uri = uri;
+    class Namespace {
+        /**
+         * @constructor
+         * @param {string} prefix
+         * @param {string} uri
+         */
+        constructor(prefix, uri) {
+            this.prefix = prefix;
+            this.uri = uri;
+        }
+        toString() { return this.uri; }
     }
-    Namespace.prototype.toString = function toString() { return this.uri; };
 
     // Expose XHTML,XUL,NS to Global-scope.
     Object.defineProperties(modules, {
