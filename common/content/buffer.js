@@ -1078,7 +1078,7 @@ const Buffer = Module("buffer", {
         if (win.scrollMaxX > 0 || win.scrollMaxY > 0)
             return win;
 
-        for (let frame in util.Array.itervalues(win.frames))
+        for (let frame of Array.from(win.frames))
             if (frame.scrollMaxX > 0 || frame.scrollMaxY > 0)
                 return frame;
 

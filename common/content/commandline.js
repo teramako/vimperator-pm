@@ -1850,7 +1850,7 @@ const ItemList = Class("ItemList", {
 
             for (let [i, row] of context.getRows(start, end, this._doc))
                 nodes[i] = row;
-            for (let [i, row] in util.Array.iteritems(nodes)) {
+            for (let [i, row] of util.Array.iteritems(nodes)) {
                 if (!row)
                     continue;
                 let display = (i >= start && i < end);

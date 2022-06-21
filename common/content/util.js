@@ -923,10 +923,10 @@ const Util = Module("util", {
          * Returns an Iterator for an array's indices and values.
          *
          * @param {Array} ary
-         * @returns {Iterator([{number}, {Object}])}
+         * @returns {Iterator<number, object>}
          */
-        iteritems: function iteritems(ary) {
-            let length = ary.length;
+        *iteritems(ary) {
+            const length = ary.length;
             for (let i = 0; i < length; i++)
                 yield [i, ary[i]];
         },
