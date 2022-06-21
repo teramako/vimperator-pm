@@ -191,7 +191,9 @@ function curry(fn, length, self, acc) {
         return fn;
 
     // Close over function with 'this'
-    function close(self, fn) function () fn.apply(self, Array.slice(arguments))
+    function close(self, fn) {
+        return () => fn.apply(self, Array.slice(arguments));
+    }
 
     if (acc == null)
         acc = [];
@@ -351,15 +353,15 @@ function Class() {
     });
     return Constructor;
 }
-Class.toString = function () "[class " + this.constructor.name + "]",
+Class.toString = function () { return "[class " + this.constructor.name + "]"; };
 Class.prototype = {
     /**
      * Initializes new instances of this class. Called automatically
      * when new instances are created.
      */
-    init: function () {},
+    init () {},
 
-    toString: function () "[instance " + this.constructor.name + "]",
+    toString () { return "[instance " + this.constructor.name + "]"; },
 
     /**
      * Exactly like {@see nsIDOMWindow#setTimeout}, except that it
@@ -371,10 +373,9 @@ Class.prototype = {
      * @returns {integer} The ID of this timeout, to be passed to
      *     {@see nsIDOMWindow#clearTimeout}.
      */
-    setTimeout: function (callback, timeout) {
+    setTimeout (callback, timeout) {
         const self = this;
-        function target() callback.call(self)
-        return window.setTimeout(target, timeout);
+        return window.setTimeout(() => callback.call(self), timeout);
     }
 };
 
@@ -400,24 +401,24 @@ function Struct(...args) {
     });
     args.forEach(function (name, i) {
         Object.defineProperty(Struct.prototype, name, {
-            get: function () this[i],
-            set: function (val) { this[i] = val },
+            get() { return this[i]; },
+            set(val) { this[i] = val },
             enumerable: true,
         });
     });
     return Struct;
 }
 const StructBase = Class("StructBase", {
-    init: function (...args) {
+    init (...args) {
         for (var i = 0, len = args.length; i < len; ++i)
             if (args[i] != null)
                 this[i] = args[i];
     },
 
-    clone: function clone() this.constructor.apply(null, this.slice()),
+    clone () { return this.constructor.apply(null, this.slice()); },
 
     // Iterator over our named members
-    __iterator__: function () {
+    __iterator__ () {
         let self = this;
         return iter(Object.keys(self.members).map(i => [self.members[i], self[i]]));
     }
@@ -432,14 +433,14 @@ const StructBase = Class("StructBase", {
      * @param {function} val The function which is to generate
      *     the default value.
      */
-    defaultValue: function (key, val) {
+    defaultValue (key, val) {
         let proto = this.prototype;
         let i = proto.members.indexOf(key);
         if (i === -1)
             return;
 
         Object.defineProperty(this.prototype, i, {
-            get: function () {
+            get () {
                 if (this === proto)
                     return;
 
@@ -450,7 +451,7 @@ const StructBase = Class("StructBase", {
                 });
                 return value;
             },
-            set: function (value) {
+            set (value) {
                 if (this === proto)
                     return;
 
