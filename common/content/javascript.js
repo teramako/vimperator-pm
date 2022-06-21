@@ -6,7 +6,7 @@
 // TODO: Clean this up.
 
 const JavaScript = Module("javascript", {
-    init: function () {
+    init() {
         this._stack = [];
         this._functions = [];
         this._top = {};  // The element on the top of the stack.
@@ -20,10 +20,10 @@ const JavaScript = Module("javascript", {
         this._cacheKey = null;
     },
 
-    get completers() JavaScript.completers, // For backward compatibility
+    get completers() { return JavaScript.completers; }, // For backward compatibility
 
     // Some object members are only accessible as function calls
-    getKey: function (obj, key) {
+    getKey(obj, key) {
         try {
             return obj[key];
         }
@@ -32,17 +32,29 @@ const JavaScript = Module("javascript", {
         }
     },
 
-    iter: function iter(obj, toplevel) {
+    /**
+     * iterate keys and values of the obj
+     * @param {*} obj 
+     * @param {boolean} toplevel 
+     * @returns {Iterator<[string, *]>}
+     */
+    *iter(obj, toplevel) {
         toplevel = !!toplevel;
         let seen = {};
 
         try {
             let orig = obj;
 
-            function iterObj(obj, toplevel) {
+            /**
+             * iterate the prototype chained objects
+             * @param {*} obj 
+             * @param {boolean} toplevel 
+             * @returns {Iterator<object>}
+             */
+            function *iterObj(obj, toplevel) {
                 if (Cu.isXrayWrapper(obj)) {
                     if (toplevel) {
-                        yield {get wrappedJSObject() 0};
+                        yield ({ get wrappedJSObject() { return 0; } });
                     }
                     // according to http://getfirebug.com/wiki/index.php/Using_win.wrappedJSObject
                     // using a wrappedJSObject itself is safe, as potential functions are always
@@ -62,7 +74,7 @@ const JavaScript = Module("javascript", {
                         yield o;
             }
 
-            for (let obj in iterObj(orig, toplevel)) {
+            for (let obj of iterObj(orig, toplevel)) {
                 try {
                     for (let k of Object.getOwnPropertyNames(obj)) {
                         let name = "|" + k;
@@ -80,11 +92,16 @@ const JavaScript = Module("javascript", {
         }
     },
 
-    // Search the object for strings starting with @key.
-    // If @last is defined, key is a quoted string, it's
-    // wrapped in @last after @offset characters are sliced
+    /**
+     * Search the object for strings starting with @key.
+     * If @last is defined, key is a quoted string, it's
+     * wrapped in @last after @offset characters are sliced
     // off of it and it's quoted.
-    objectKeys: function objectKeys(obj, toplevel) {
+     * @param {*} obj 
+     * @param {boolean} toplevel 
+     * @returns {object[]}
+     */
+    objectKeys(obj, toplevel) {
         // Things we can dereference
         if (["object", "string", "function"].indexOf(typeof obj) == -1)
             return [];
@@ -115,7 +132,14 @@ const JavaScript = Module("javascript", {
         return completions;
     },
 
-    eval: function eval(arg, key, tmp) {
+    /**
+     * eval {arg} of javascript code and returns the results object.
+     * @param {string} arg 
+     * @param {string} key 
+     * @param {*} tmp  temporary execution context
+     * @returns {object|null}
+     */
+    eval(arg, key, tmp) {
         let cache = this.context.cache.eval;
         let context = this.context.cache.evalContext;
 
@@ -136,11 +160,17 @@ const JavaScript = Module("javascript", {
         }
     },
 
-    // Get an element from the stack. If @frame is negative,
-    // count from the top of the stack, otherwise, the bottom.
-    // If @nth is provided, return the @mth value of element @type
-    // of the stack entry at @frame.
-    _get: function (frame, nth, type) {
+    /**
+     * Get an element from the stack. If @frame is negative,
+     * count from the top of the stack, otherwise, the bottom.
+     * If @nth is provided, return the @mth value of element @type
+     * of the stack entry at @frame.
+     * @param {number} frame 
+     * @param {number|null} nth 
+     * @param {*} type 
+     * @returns {*}
+     */
+    _get(frame, nth, type) {
         let a = this._stack[frame >= 0 ? frame : this._stack.length + frame];
         if (type != null)
             a = a[type];
@@ -149,8 +179,8 @@ const JavaScript = Module("javascript", {
         return a[a.length - nth - 1];
     },
 
-    // Push and pop the stack, maintaining references to 'top' and 'last'.
-    _push: function push(arg) {
+     // Push and pop the stack, maintaining references to 'top' and 'last'.
+    _push(arg) {
         this._top = {
             offset:     this._i,
             char:       arg,
@@ -164,7 +194,7 @@ const JavaScript = Module("javascript", {
         this._stack.push(this._top);
     },
 
-    _pop: function pop(arg) {
+    _pop(arg) {
         if (this._top.char != arg) {
             this.context.highlight(this._top.offset, this._i - this._top.offset, "SPELLCHECK");
             this.context.highlight(this._top.offset, 1, "FIND");
@@ -185,7 +215,7 @@ const JavaScript = Module("javascript", {
         return ret;
     },
 
-    _buildStack: function (filter) {
+    _buildStack(filter) {
         let self = this;
 
         // Todo: Fix these one-letter variable names.
@@ -193,7 +223,7 @@ const JavaScript = Module("javascript", {
         this._c = "";     // Current index and character, respectively.
 
         // Reuse the old stack.
-        if (this._str && filter.substr(0, this._str.length) == this._str) {
+        if (this._str && filter.substring(0, this._str.length) == this._str) {
             this._i = this._str.length;
             if (this.popStatement)
                 this._top.statements.pop();
@@ -296,23 +326,34 @@ const JavaScript = Module("javascript", {
         this._lastIdx = this._i;
     },
 
-    // Don't eval any function calls unless the user presses tab.
-    _checkFunction: function (start, end, key) {
-        let res = this._functions.some(function (idx) idx >= start && idx < end);
+    /**
+     * Don't eval any function calls unless the user presses tab.
+     * @param {number} start 
+     * @param {number} end 
+     * @param {string} key 
+     * @returns {boolean}
+     */
+    _checkFunction(start, end, key) {
+        let res = this._functions.some(idx => idx >= start && idx < end);
         if (!res || this.context.tabPressed || key in this.cache.eval)
             return false;
         this.context.waitingForTab = true;
         return true;
     },
 
-    // For each DOT in a statement, prefix it with TMP, eval it,
-    // and save the result back to TMP. The point of this is to
-    // cache the entire path through an object chain, mainly in
-    // the presence of function calls. There are drawbacks. For
-    // instance, if the value of a variable changes in the course
-    // of inputting a command (let foo=bar; frob(foo); foo=foo.bar; ...),
-    // we'll still use the old value. But, it's worth it.
-    _getObj: function (frame, stop) {
+    /**
+     * For each DOT in a statement, prefix it with TMP, eval it,
+     * and save the result back to TMP. The point of this is to
+     * cache the entire path through an object chain, mainly in
+     * the presence of function calls. There are drawbacks. For
+     * instance, if the value of a variable changes in the course
+     * of inputting a command (let foo=bar; frob(foo); foo=foo.bar; ...),
+     * we'll still use the old value. But, it's worth it.
+     * @param {number} frame 
+     * @param {*} stop 
+     * @returns {any[][]}
+     */
+    _getObj(frame, stop) {
         let statement = this._get(frame, 0, "statements") || 0; // Current statement.
         let prev = statement;
         let obj;
@@ -337,7 +378,7 @@ const JavaScript = Module("javascript", {
         return [[obj, cacheKey]];
     },
 
-    _getObjKey: function (frame) {
+    _getObjKey(frame) {
         let dot = this._get(frame, 0, "dots") || -1; // Last dot in frame.
         let statement = this._get(frame, 0, "statements") || 0; // Current statement.
         let end = (frame == -1 ? this._lastIdx : this._get(frame + 1).offset);
@@ -357,7 +398,7 @@ const JavaScript = Module("javascript", {
         return [dot + 1 + space.length, obj, key];
     },
 
-    _fill: function (context, obj, name, compl, anchored, key, last, offset) {
+    _fill(context, obj, name, compl, anchored, key, last, offset) {
         context.title = [name];
         context.anchored = anchored;
         context.filter = key;
@@ -365,35 +406,35 @@ const JavaScript = Module("javascript", {
         context.key = name;
 
         if (last != null)
-            context.quote = [last, function (text) util.escapeString(text.substr(offset), ""), last];
+            context.quote = [last, text => util.escapeString(text.substring(offset), ""), last];
         else // We're not looking for a quoted string, so filter out anything that's not a valid identifier
-            context.filters.push(function (item) /^[a-zA-Z_$][\w$]*$/.test(item.text));
+            context.filters.push(item => /^[a-zA-Z_$][\w$]*$/.test(item.text));
 
         compl.call(self, context, obj);
     },
 
-    _complete: function (objects, key, compl, string, last) {
+    _complete(objects, key, compl, string, last) {
         const self = this;
         let orig = compl;
         if (!compl) {
             compl = function (context, obj, recurse) {
-                context.process = [null, function highlight(item, v) template.highlight(v, true)];
+                context.process = [null, (item, v) => template.highlight(v, true)];
                 // Sort in a logical fashion for object keys:
                 //  Numbers are sorted as numbers, rather than strings, and appear first.
                 //  Constants are unsorted, and appear before other non-null strings.
                 //  Other strings are sorted in the default manner.
                 let compare = context.compare;
-                function isnan(item) item != '' && isNaN(item)
+                function isnan(item) { return item != '' && isNaN(item); }
                 context.compare = function (a, b) {
                     if (!isnan(a.item.key) && !isnan(b.item.key))
                         return a.item.key - b.item.key;
                     return isnan(b.item.key) - isnan(a.item.key) || compare(a, b);
                 };
                 if (!context.anchored) // We've already listed anchored matches, so don't list them again here.
-                    context.filters.push(function (item) util.compareIgnoreCase(item.text.substr(0, this.filter.length), this.filter));
+                    context.filters.push(function (item) { return util.compareIgnoreCase(item.text.substr(0, this.filter.length), this.filter); });
                 if (obj == self.cache.evalContext)
                     context.regenerate = true;
-                context.generate = function () self.objectKeys(obj, !recurse);
+                context.generate = function () { return self.objectKeys(obj, !recurse); };
             };
         }
         // TODO: Make this a generic completion helper function.
@@ -410,7 +451,7 @@ const JavaScript = Module("javascript", {
         for (let obj of objects) {
             let name = obj[1] + " (prototypes)";
             this.context.fork(name, this._top.offset, this, this._fill,
-                obj[0], name, function (a, b) compl(a, b, true),
+                obj[0], name, (a, b) => compl(a, b, true),
                 true, filter, last, key.length);
         }
 
@@ -424,12 +465,12 @@ const JavaScript = Module("javascript", {
         for (let obj of objects) {
             let name = obj[1] + " (prototype substrings)";
             this.context.fork(name, this._top.offset, this, this._fill,
-                obj[0], name, function (a, b) compl(a, b, true),
+                obj[0], name, (a, b) => compl(a, b, true),
                 false, filter, last, key.length);
         }
     },
 
-    _getKey: function () {
+    _getKey() {
         if (this._last == "")
             return "";
         // After the opening [ up to the opening ", plus '' to take care of any operators before it
@@ -438,9 +479,9 @@ const JavaScript = Module("javascript", {
         return this.eval(key);
     },
 
-    get cache() this.context.cache,
+    get cache() { return this.context.cache; },
 
-    complete: function _complete(context) {
+    complete(context) {
         const self = this;
         this.context = context;
 
@@ -455,7 +496,7 @@ const JavaScript = Module("javascript", {
         }
 
         this.context.getCache("eval", Object);
-        this.context.getCache("evalContext", function () Object.create(userContext));
+        this.context.getCache("evalContext", () => Object.create(userContext));
 
         // Okay, have parse stack. Figure out what we're completing.
 
@@ -534,7 +575,7 @@ const JavaScript = Module("javascript", {
                 for (let idx of this._get(-2).comma) {
                     let arg = this._str.substring(prev + 1, idx);
                     prev = idx;
-                    util.memoize(args, i, function () self.eval(arg));
+                    util.memoize(args, i, function () { return self.eval(arg); });
                     ++i;
                 }
                 let key = this._getKey();
@@ -617,7 +658,7 @@ const JavaScript = Module("javascript", {
      * @param {function[]} completers An array of completer
      *      functions.
      */
-    setCompleter: function (funcs, completers) {
+    setCompleter(funcs, completers) {
         funcs = Array.concat(funcs);
         for (let func of funcs) {
             func.liberatorCompleter = function (context, func, obj, args) {
@@ -629,11 +670,11 @@ const JavaScript = Module("javascript", {
         }
     }
 }, {
-    completion: function () {
+    completion() {
         completion.javascript = this.closure.complete;
         completion.javascriptCompleter = JavaScript; // Backwards compatibility.
     },
-    options: function () {
+    options() {
         options.add(["inspectcontentobjects"],
             "Allow completion of JavaScript objects coming from web content. POSSIBLY INSECURE!",
             "boolean", false);
