@@ -14,7 +14,7 @@ const ModuleBase = Class("ModuleBase", {
      */
     requires: [],
 
-    toString: function () "[module " + this.constructor.name + "]"
+    toString() { return "[module " + this.constructor.name + "]"; }
 });
 
 /**
@@ -69,7 +69,7 @@ Module.constructors = {};
 window.addEventListener("load", function onload() {
     window.removeEventListener("load", onload, false);
 
-    function dump(str) window.dump(String.replace(str, /\n?$/, "\n").replace(/^/m, Config.prototype.name.toLowerCase() + ": "))
+    function dump(str) { window.dump(String.replace(str, /\n?$/, "\n").replace(/^/m, Config.prototype.name.toLowerCase() + ": ")); }
     const start = Date.now();
     const deferredInit = { load: [] };
     const seen = new Set();
@@ -90,8 +90,9 @@ window.addEventListener("load", function onload() {
             modules[module.name] = module();
             loaded.push(module.name);
 
-            function init(mod, module)
-                function () module.INIT[mod].call(modules[module.name], modules[mod])
+            function init(mod, module) {
+                return function () { module.INIT[mod].call(modules[module.name], modules[mod]); }
+            }
             for (let mod of loaded) {
                 try {
                     if (mod in module.INIT)

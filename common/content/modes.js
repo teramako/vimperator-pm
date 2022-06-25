@@ -8,7 +8,7 @@
 const Modes = Module("modes", {
     requires: ["config", "util"],
 
-    init: function () {
+    init() {
         this._main = 1;     // NORMAL
         this._extended = 0; // NONE
 
@@ -29,12 +29,12 @@ const Modes = Module("modes", {
         // main modes, only one should ever be active
         this.addMode("NORMAL",   { char: "n", display: -1 });
         this.addMode("INSERT",   { char: "i", input: true });
-        this.addMode("VISUAL",   { char: "v", display: function () "VISUAL" + (editor.getVisualMode() ? " " + editor.getVisualMode() : "") });
+        this.addMode("VISUAL",   { char: "v", display() { return "VISUAL" + (editor.getVisualMode() ? " " + editor.getVisualMode() : ""); } });
         this.addMode("COMMAND_LINE", { char: "c", input: true, display: -1 });
         this.addMode("CARET"); // text cursor is visible
         this.addMode("TEXTAREA", { char: "i" });
         this.addMode("EMBED",    { input: true });
-        this.addMode("CUSTOM",   { display: function () plugins.mode });
+        this.addMode("CUSTOM",   { display() { return plugins.mode; } });
         // this._extended modes, can include multiple modes, and even main modes
         this.addMode("EX", true);
         this.addMode("HINTS", true);
@@ -47,10 +47,10 @@ const Modes = Module("modes", {
         this.addMode("LINE", true); // linewise visual mode
         this.addMode("PROMPT", true);
 
-        config.modes.forEach(function (mode) { this.addMode.apply(this, mode); }, this);
+        config.modes.forEach(mode => { this.addMode.apply(this, mode); });
     },
 
-    _getModeMessage: function () {
+    _getModeMessage() {
         if (this._passNextKey) {
             return "IGNORE";
         } else if (this._passAllKeys) {
@@ -76,7 +76,7 @@ const Modes = Module("modes", {
     // Usually you should only indicate to leave a special mode like HINTS
     // by calling modes.reset() and adding the stuff which is needed
     // for its cleanup here
-    _handleModeChange: function (oldMode, newMode, oldExtended) {
+    _handleModeChange(oldMode, newMode, oldExtended) {
         switch (oldMode) {
             case modes.TEXTAREA:
             case modes.INSERT:
@@ -129,9 +129,9 @@ const Modes = Module("modes", {
 
     NONE: 0,
 
-    __iterator__: function () util.Array.itervalues(this.all),
+    __iterator__() { return util.Array.itervalues(this.all); },
 
-    get all() this._mainModes.slice(),
+    get all() { return this._mainModes.slice(); },
 
     get mainModes() {
         return iter(Object.keys(modes._modeMap)
@@ -139,9 +139,9 @@ const Modes = Module("modes", {
                           .map(k => modes._modeMap[k]));
     },
 
-    get mainMode() this._modeMap[this._main],
+    get mainMode() { return this._modeMap[this._main]; },
 
-    addMode: function (name, extended, options) {
+    addMode(name, extended, options) {
         let disp = name.replace(/_/g, " ");
         this[name] = 1 << this._lastMode++;
         if (typeof extended == "object") {
@@ -156,42 +156,42 @@ const Modes = Module("modes", {
             name: name,
             disp: disp
         }, options);
-        this._modeMap[name].display = this._modeMap[name].display || function () disp;
+        this._modeMap[name].display = this._modeMap[name].display || (() => disp);
         if (!extended)
             this._mainModes.push(this[name]);
         if ("mappings" in modules)
             mappings.addMode(this[name]);
     },
 
-    getMode: function (name) this._modeMap[name],
+    getMode(name) { return this._modeMap[name]; },
 
-    getCharModes: function (chr) {
+    getCharModes(chr) {
         return Object.keys(this._modeMap)
                      .map(k => this._modeMap[k])
                      .filter(m => m.char == chr);
     },
 
-    matchModes: function (obj) {
+    matchModes(obj) {
         return Object.keys(this._modeMap)
                      .map(k => this._modeMap[k])
-                     .filter(m => array(keys(obj)).every(function (k) obj[k] == (m[k] || false)));
+                     .filter(m => array(keys(obj)).every(k => obj[k] == (m[k] || false)));
     },
 
     // show the current mode string in the command line
-    show: function () {
+    show() {
         if (options.showmode)
             commandline.setModeMessage(this._getModeMessage());
     },
 
     // add/remove always work on the this._extended mode only
-    add: function (mode) {
+    add(mode) {
         this._extended |= mode;
         this.show();
     },
 
     // helper function to set both modes in one go
     // if silent == true, you also need to take care of the mode handling changes yourself
-    set: function (mainMode, extendedMode, silent, stack) {
+    set(mainMode, extendedMode, silent, stack) {
         silent = (silent || this._main == mainMode && this._extended == extendedMode);
         // if a this._main mode is set, the this._extended is always cleared
         let oldMain = this._main, oldExtended = this._extended;
@@ -216,20 +216,20 @@ const Modes = Module("modes", {
 
     // TODO: Deprecate this in favor of addMode? --Kris
     //       Ya --djk
-    setCustomMode: function (modestr, oneventfunc, stopfunc) {
+    setCustomMode(modestr, oneventfunc, stopfunc) {
         // TODO this.plugin[id]... ('id' maybe submode or what..)
         plugins.mode = modestr;
         plugins.onEvent = oneventfunc;
         plugins.stop = stopfunc;
     },
 
-    passAllKeysExceptSome: function passAllKeysExceptSome(exceptions) {
+    passAllKeysExceptSome(exceptions) {
         this._passAllKeys = true;
         this._passKeysExceptions = exceptions || [];
         this.show();
     },
 
-    isKeyIgnored: function isKeyIgnored(key) {
+    isKeyIgnored(key) {
         if (modes.passNextKey)
             return true;
 
@@ -247,7 +247,7 @@ const Modes = Module("modes", {
     },
 
     // keeps recording state
-    reset: function (silent) {
+    reset(silent) {
         this._modeStack = [];
         if (config.isComposeWindow)
             this.set(modes.COMPOSE, modes.NONE, silent);
@@ -255,7 +255,7 @@ const Modes = Module("modes", {
             this.set(modes.NORMAL, modes.NONE, silent);
     },
 
-    remove: function (mode) {
+    remove(mode) {
         if (this._extended & mode) {
             this._extended &= ~mode;
             this.show();
@@ -264,26 +264,26 @@ const Modes = Module("modes", {
 
     isMenuShown: false, // when a popup menu is active
 
-    get passNextKey() this._passNextKey,
+    get passNextKey() { return this._passNextKey; },
     set passNextKey(value) { this._passNextKey = value; this.show(); },
 
-    get passAllKeys() this._passAllKeys,
+    get passAllKeys() { return this._passAllKeys; },
     set passAllKeys(value) {
         this._passAllKeys = value;
         this._passKeysExceptions = null;
         this.show();
     },
 
-    get isRecording()  this._isRecording,
+    get isRecording() { return this._isRecording; },
     set isRecording(value) { this._isRecording = value; this.show(); },
 
-    get isReplaying() this._isReplaying,
+    get isReplaying() { return this._isReplaying; },
     set isReplaying(value) { this._isReplaying = value; this.show(); },
 
-    get main() this._main,
+    get main() { return this._main; },
     set main(value) { this.set(value); },
 
-    get extended() this._extended,
+    get extended() { return this._extended; },
     set extended(value) { this.set(null, value); }
 });
 

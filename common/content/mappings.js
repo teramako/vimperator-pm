@@ -31,8 +31,8 @@
  * @private
  */
 const Map = Class("Map", {
-    init: function (modes, keys, description, action, extraInfo) {
-        modes = Array.concat(modes).map(function (m) isobject(m) ? m.mask : m);
+    init(modes, keys, description, action, extraInfo) {
+        modes = Array.concat(modes).map(m => isobject(m) ? m.mask : m);
 
         this.modes = modes;
         this.names = keys.map(events.canonicalKeys);
@@ -93,7 +93,7 @@ const Map = Class("Map", {
      * @param {string} name The name to query.
      * @returns {boolean}
      */
-    hasName: function (name) this.names.indexOf(name) >= 0,
+    hasName(name) { return this.names.indexOf(name) >= 0; },
 
     /**
      * Execute the action for this mapping.
@@ -105,7 +105,7 @@ const Map = Class("Map", {
      * @param {string} argument The normal argument if accepted by this
      *     mapping. E.g. "a" for "ma"
      */
-    execute: function (motion, count, argument) {
+    execute(motion, count, argument) {
         let args = [];
 
         if (this.motion)
@@ -115,8 +115,7 @@ const Map = Class("Map", {
         if (this.arg)
             args.push(argument);
 
-        let self = this;
-        function repeat() self.action.apply(self, args)
+        const repeat = () => this.action.apply(this, args);
         if (this.names[0] != ".") // FIXME: Kludge.
             mappings.repeat = repeat;
 
@@ -129,7 +128,7 @@ const Map = Class("Map", {
      * @param {Mapping}
      * @returns {boolean}
      */
-    equals: function (map) {
+    equals(map) {
         return this.rhs == map.rhs && this.names[0] == map.names && this.matchingUrls == map.matchingUrls;
     }
 
@@ -141,12 +140,12 @@ const Map = Class("Map", {
 const Mappings = Module("mappings", {
     requires: ["modes"],
 
-    init: function () {
+    init() {
         this._main = []; // default mappings
         this._user = []; // user created mappings
     },
 
-    _matchingUrlsTest: function (map, patternOrUrl) {
+    _matchingUrlsTest(map, patternOrUrl) {
         if (!patternOrUrl)
             return !map.matchingUrls;
         if (patternOrUrl instanceof RegExp)
@@ -154,7 +153,7 @@ const Mappings = Module("mappings", {
         return !map.matchingUrls || map.matchingUrls.test(patternOrUrl);
     },
 
-    _addMap: function (map) {
+    _addMap(map) {
         let where = map.user ? this._user : this._main;
         map.modes.forEach(function (mode) {
             if (!(mode in where))
@@ -164,7 +163,7 @@ const Mappings = Module("mappings", {
         });
     },
 
-    _getMap: function (mode, cmd, patternOrUrl, stack) {
+    _getMap(mode, cmd, patternOrUrl, stack) {
         let maps = stack[mode] || [];
 
         for (let map of maps) {
@@ -175,7 +174,7 @@ const Mappings = Module("mappings", {
         return null;
     },
 
-    _removeMap: function (mode, cmd, patternOrUrl) {
+    _removeMap(mode, cmd, patternOrUrl) {
         let maps = this._user[mode] || [];
         let names;
 
@@ -193,10 +192,10 @@ const Mappings = Module("mappings", {
         }
     },
 
-    _expandLeader: function (keyString) keyString.replace(/<Leader>/gi, mappings.getMapLeader()),
+    _expandLeader(keyString) { return keyString.replace(/<Leader>/gi, mappings.getMapLeader()); },
 
     // Return all mappings present in all @modes
-    _mappingsIterator: function (modes, stack) {
+    _mappingsIterator(modes, stack) {
         modes = modes.slice();
         return iter(stack[modes.shift()].filter(map =>
             modes.every(mode => stack[mode].some(m => map.equals(m)))));
@@ -204,7 +203,7 @@ const Mappings = Module("mappings", {
 
     // NOTE: just normal mode for now
     /** @property {Iterator(Map)} @private */
-    __iterator__: function () this._mappingsIterator([modes.NORMAL], this._main),
+    __iterator__() { return this._mappingsIterator([modes.NORMAL], this._main); },
 
     // used by :mkvimperatorrc to save mappings
     /**
@@ -214,9 +213,9 @@ const Mappings = Module("mappings", {
      * @param {number} mode The mode to return mappings from.
      * @returns {Iterator(Map)}
      */
-    getUserIterator: function (mode) this._mappingsIterator(mode, this._user),
+    getUserIterator(mode) { return this._mappingsIterator(mode, this._user); },
 
-    addMode: function (mode) {
+    addMode(mode) {
         if (!(mode in this._user || mode in this._main)) {
             this._main[mode] = [];
             this._user[mode] = [];
@@ -235,7 +234,7 @@ const Mappings = Module("mappings", {
      * @optional
      * @returns {Map}
      */
-    add: function (modes, keys, description, action, extra) {
+    add(modes, keys, description, action, extra) {
         let map = Map(modes, keys, description, action, extra);
         this._addMap(map);
         return map;
@@ -254,7 +253,7 @@ const Mappings = Module("mappings", {
      * @optional
      * @returns {Map}
      */
-    addUserMap: function (modes, keys, description, action, extra) {
+    addUserMap(modes, keys, description, action, extra) {
         keys = keys.map(this._expandLeader);
         extra = extra || {};
         extra.user = true;
@@ -279,7 +278,7 @@ const Mappings = Module("mappings", {
      * @param {RegExp|string} URL matching pattern or URL.
      * @returns {Map}
      */
-    get: function (mode, cmd, patternOrUrl) {
+    get(mode, cmd, patternOrUrl) {
         mode = mode || modes.NORMAL;
         return this._getMap(mode, cmd, patternOrUrl, this._user) || this._getMap(mode, cmd, patternOrUrl, this._main);
     },
@@ -292,7 +291,7 @@ const Mappings = Module("mappings", {
      * @param {RegExp|string} URL matching pattern or URL.
      * @returns {Map}
      */
-    getDefault: function (mode, cmd, patternOrUrl) {
+    getDefault(mode, cmd, patternOrUrl) {
         mode = mode || modes.NORMAL;
         return this._getMap(mode, cmd, patternOrUrl, this._main);
     },
@@ -306,7 +305,7 @@ const Mappings = Module("mappings", {
      * @param {RegExp|string} URL matching pattern or URL.
      * @returns {Map[]}
      */
-    getCandidates: function (mode, prefix, patternOrUrl) {
+    getCandidates(mode, prefix, patternOrUrl) {
         let mappings = this._user[mode].concat(this._main[mode]);
         let matches = [];
 
@@ -332,7 +331,7 @@ const Mappings = Module("mappings", {
      * @returns {string}
      */
     // FIXME: property
-    getMapLeader: function () {
+    getMapLeader() {
         let leaderRef = liberator.variableReference("mapleader");
         return leaderRef[0] ? leaderRef[0][leaderRef[1]] : "\\";
     },
@@ -346,9 +345,8 @@ const Mappings = Module("mappings", {
      * @param {RegExp|string} URL matching pattern or URL.
      * @returns {boolean}
      */
-    hasMap: function (mode, cmd, patternOrUrl) {
-        let self = this;
-        return this._user[mode].some(function (map) map.hasName(cmd) && self._matchingUrlsTest(map, patternOrUrl));
+    hasMap(mode, cmd, patternOrUrl) {
+        return this._user[mode].some(map => map.hasName(cmd) && this._matchingUrlsTest(map, patternOrUrl));
     },
 
     /**
@@ -358,7 +356,7 @@ const Mappings = Module("mappings", {
      * @param {string} cmd The map name to match.
      * @param {RegExp|string} URL matching pattern or URL.
      */
-    remove: function (mode, cmd, patternOrUrl) {
+    remove(mode, cmd, patternOrUrl) {
         this._removeMap(mode, cmd, patternOrUrl);
     },
 
@@ -367,7 +365,7 @@ const Mappings = Module("mappings", {
      *
      * @param {number} mode The mode to remove all mappings from.
      */
-    removeAll: function (mode) {
+    removeAll(mode) {
         this._user[mode] = [];
     },
 
@@ -379,7 +377,7 @@ const Mappings = Module("mappings", {
      * @param {string} filter The filter string to match.
      * @param {RegExp|string} URL matching pattern or URL.
      */
-    list: function (modes, filter, urlPattern) {
+    list(modes, filter, urlPattern) {
         let maps = this._mappingsIterator(modes, this._user);
         if (filter)
             maps = Array.from(maps).filter(map => map.names[0] == filter);
@@ -397,7 +395,7 @@ const Mappings = Module("mappings", {
                         modes += (modes ? ", " : "") + m.name;
             });
             let option = xml``;
-            var add = function (lhs, rhs) xml`${lhs}${rhs}`;
+            var add = (lhs, rhs) => xml`${lhs}${rhs}`;
             if (map.silent)
                 option = add(option, xml`<span highlight="Keyword">silent</span>`);
             if (map.noremap) {
@@ -418,7 +416,7 @@ const Mappings = Module("mappings", {
     }
 }, {
 }, {
-    commands: function () {
+    commands() {
         function addMapCommands(ch, modes, modeDescription) {
             // 0 args -> list all maps
             // 1 arg  -> list the maps starting with args
@@ -477,7 +475,7 @@ const Mappings = Module("mappings", {
                         Array.from(mappings.getUserIterator(modes))
                              .filter(m => m.matchingUrls)
                              .map(m => m.matchingUrls.source)
-                    ).map(function (re) [re, re]);
+                    ).map(re => [re, re]);
                     if (current) {
                         if (buffer.URL)
                             completions.unshift([util.escapeRegex(buffer.URL), "Current buffer URL"]);
@@ -489,13 +487,13 @@ const Mappings = Module("mappings", {
             }
 
             const opts = {
-                    completer: function (context, args) completion.userMapping(context, args, modes),
+                    completer(context, args) { completion.userMapping(context, args, modes); },
                     options: [
                         [["<silent>", "<Silent>"],  commands.OPTION_NOARG],
                         [["-urls", "-u"],  commands.OPTION_STRING, regexpValidator, urlsCompleter(modes, true)],
                     ],
                     literal: 1,
-                    serial: function () {
+                    serial() {
                         function options (map) {
                             let opts = {};
                             if (map.silent)
@@ -529,7 +527,7 @@ const Mappings = Module("mappings", {
 
             commands.add([ch + "mapc[lear]"],
                 "Remove all mappings" + modeDescription,
-                function () { modes.forEach(function (mode) { mappings.removeAll(mode); }); },
+                function () { modes.forEach(mode => mappings.removeAll(mode)); },
                 { argCount: "0" });
 
             commands.add([ch + "unm[ap]"],
@@ -553,7 +551,7 @@ const Mappings = Module("mappings", {
                     options: [
                         [["-urls", "-u"],  commands.OPTION_STRING, regexpValidator, urlsCompleter(modes)],
                     ],
-                    completer: function (context, args) completion.userMapping(context, args, modes)
+                    completer(context, args) { completion.userMapping(context, args, modes); }
                 });
         }
 
@@ -568,7 +566,7 @@ const Mappings = Module("mappings", {
                          .map(m => m.mask),
                     [mode.disp.toLowerCase()]);
     },
-    completion: function () {
+    completion() {
         JavaScript.setCompleter(this.get,
             [
                 null,
@@ -597,7 +595,7 @@ const Mappings = Module("mappings", {
             }
         };
     },
-    modes: function () {
+    modes() {
         for (let mode in modes) {
             this._main[mode] = [];
             this._user[mode] = [];
