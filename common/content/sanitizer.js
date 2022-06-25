@@ -14,7 +14,7 @@
 const Sanitizer = Module("sanitizer", {
     requires: ["liberator"],
 
-    init: function () {
+    init() {
         const self = this;
         liberator.loadScript("chrome://browser/content/sanitize.js", Sanitizer);
         this.__proto__.__proto__ = new Sanitizer.Sanitizer; // Good enough.
@@ -25,7 +25,7 @@ const Sanitizer = Module("sanitizer", {
 
     // Largely ripped from from browser/base/content/sanitize.js so we can override
     // the pref strategy without stepping on the global prefs namespace.
-    sanitize: function () {
+    sanitize() {
         const prefService = services.get("prefs");
         let branch = prefService.getBranch(this.prefDomain);
         let branch2 = prefService.getBranch(this.prefDomain2);
@@ -65,12 +65,12 @@ const Sanitizer = Module("sanitizer", {
         return errors;
     },
 
-    get prefNames() util.Array.flatten([this.prefDomain, this.prefDomain2].map(options.allPrefs))
+    get prefNames() { return util.Array.flatten([this.prefDomain, this.prefDomain2].map(options.allPrefs)); }
 }, {
-    argToPref: function (arg) ["commandLine", "offlineApps", "siteSettings"].filter(function (pref) pref.toLowerCase() == arg)[0] || arg,
-    prefToArg: function (pref) pref.toLowerCase().replace(/.*\./, "")
+    argToPref(arg) { return ["commandLine", "offlineApps", "siteSettings"].filter(pref => pref.toLowerCase() == arg)[0] || arg; },
+    prefToArg(pref) { return pref.toLowerCase().replace(/.*\./, ""); }
 }, {
-    commands: function () {
+    commands() {
         commands.add(["sa[nitize]"],
             "Clear private data",
             function (args) {
@@ -96,7 +96,7 @@ const Sanitizer = Module("sanitizer", {
                 else {
                     liberator.assert(args.length > 0, "Argument required");
 
-                    for (let [,elem] in args) {
+                    for (const elem of args) {
                         if (!options.get("sanitizeitems").isValidValue(elem)) {
                             liberator.echoerr("Invalid data item: " + elem);
                             return;
@@ -124,26 +124,26 @@ const Sanitizer = Module("sanitizer", {
             {
                 argCount: "*", // FIXME: should be + and 0
                 bang: true,
-                completer: function (context) {
+                completer(context) {
                     context.title = ["Privacy Item", "Description"];
                     context.completions = options.get("sanitizeitems").completer();
                 },
                 options: [
                     [["-timespan", "-t"],
                      commands.OPTION_INT,
-                     function (arg) /^[0-4]$/.test(arg),
-                     function () options.get("sanitizetimespan").completer()]
+                     arg => /^[0-4]$/.test(arg),
+                     () => options.get("sanitizetimespan").completer()]
                  ]
             });
     },
-    options: function () {
+    options() {
         const self = this;
 
         // add liberator-specific private items
         [
             {
                 name: "commandLine",
-                action: function () {
+                action() {
                     let stores = ["command", "search"];
 
                     if (self.range) {
@@ -155,16 +155,16 @@ const Sanitizer = Module("sanitizer", {
                         });
                     }
                     else
-                        stores.forEach(function (store) { storage["history-" + store].truncate(0); });
+                        stores.forEach(store => storage["history-" + store].truncate(0));
                 }
             },
             {
                 name: "macros",
-                action: function () { storage.macros.clear(); }
+                action() { storage.macros.clear(); }
             },
             {
                 name: "marks",
-                action: function () {
+                action() {
                     storage["local-marks"].clear();
                     storage["url-marks"].clear();
                 }
@@ -199,7 +199,7 @@ const Sanitizer = Module("sanitizer", {
             "The default list of private items to sanitize",
             "stringlist", "cache,commandline,cookies,formdata,history,marks,sessions",
             {
-                setter: function (values) {
+                setter(values) {
                     for (let pref of sanitizer.prefNames) {
                         options.setPref(pref, false);
 
@@ -213,39 +213,43 @@ const Sanitizer = Module("sanitizer", {
 
                     return values;
                 },
-                getter: function () sanitizer.prefNames.filter(function (pref) options.getPref(pref)).map(Sanitizer.prefToArg).join(","),
-                completer: function (value) [
-                    ["cache", "Cache"],
-                    ["commandline", "Command-line history"],
-                    ["cookies", "Cookies"],
-                    ["downloads", "Download history"],
-                    ["formdata", "Saved form and search history"],
-                    ["history", "Browsing history"],
-                    ["macros", "Saved macros"],
-                    ["marks", "Local and URL marks"],
-                    ["offlineapps", "Offline website data"],
-                    ["passwords", "Saved passwords"],
-                    ["sessions", "Authenticated sessions"],
-                    ["sitesettings", "Site preferences"]
-                ]
+                getter() { return sanitizer.prefNames.filter(pref => options.getPref(pref)).map(Sanitizer.prefToArg).join(","); },
+                completer(value) {
+                    return [
+                        ["cache", "Cache"],
+                        ["commandline", "Command-line history"],
+                        ["cookies", "Cookies"],
+                        ["downloads", "Download history"],
+                        ["formdata", "Saved form and search history"],
+                        ["history", "Browsing history"],
+                        ["macros", "Saved macros"],
+                        ["marks", "Local and URL marks"],
+                        ["offlineapps", "Offline website data"],
+                        ["passwords", "Saved passwords"],
+                        ["sessions", "Authenticated sessions"],
+                        ["sitesettings", "Site preferences"]
+                    ];
+                }
             });
 
         options.add(["sanitizetimespan", "sts"],
             "The default sanitizer time span",
             "number", 1,
             {
-                setter: function (value) {
+                setter(value) {
                     options.setPref("privacy.sanitize.timeSpan", value);
                     return value;
                 },
-                getter: function () options.getPref("privacy.sanitize.timeSpan", this.defaultValue),
-                completer: function (value) [
-                    ["0", "Everything"],
-                    ["1", "Last hour"],
-                    ["2", "Last two hours"],
-                    ["3", "Last four hours"],
-                    ["4", "Today"]
-                ]
+                getter() { return options.getPref("privacy.sanitize.timeSpan", this.defaultValue); },
+                completer(value) {
+                    return [
+                        ["0", "Everything"],
+                        ["1", "Last hour"],
+                        ["2", "Last two hours"],
+                        ["3", "Last four hours"],
+                        ["4", "Today"]
+                    ];
+                }
             });
     }
 });

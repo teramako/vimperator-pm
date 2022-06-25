@@ -11,7 +11,7 @@
 const QuickMarks = Module("quickmarks", {
     requires: ["config", "storage"],
 
-    init: function () {
+    init() {
         this._qmarks = storage.newMap("quickmarks", { store: true });
     },
 
@@ -23,7 +23,7 @@ const QuickMarks = Module("quickmarks", {
      * @param {string} qmark The name of the quickmark {A-Z}.
      * @param {string} location The URL accessed by this quickmark.
      */
-    add: function add(qmark, location) {
+    add(qmark, location) {
         this._qmarks.set(qmark, location);
         liberator.echomsg("Added QuickMark '" + qmark + "': " + location);
     },
@@ -35,7 +35,7 @@ const QuickMarks = Module("quickmarks", {
      * @param {string} filter The list of quickmarks to delete.
      *
      */
-    remove: function remove(filter) {
+    remove(filter) {
         let pattern = RegExp("[" + filter.replace(/\s+/g, "") + "]");
 
         for (let [qmark, ] in this._qmarks) {
@@ -47,7 +47,7 @@ const QuickMarks = Module("quickmarks", {
     /**
      * Removes all quickmarks.
      */
-    removeAll: function removeAll() {
+    removeAll() {
         this._qmarks.clear();
     },
 
@@ -58,7 +58,7 @@ const QuickMarks = Module("quickmarks", {
      * @param {number} where A constant describing where to open the page.
      *     See {@link Liberator#open}.
      */
-    jumpTo: function jumpTo(qmark, where) {
+    jumpTo(qmark, where) {
         let url = this._qmarks.get(qmark);
 
         if (url)
@@ -74,18 +74,18 @@ const QuickMarks = Module("quickmarks", {
      * Ranges are not supported.
      */
     // FIXME: filter should match that of quickmarks.remove or vice versa
-    list: function list(filter) {
+    list(filter) {
         let marks = Array.from(iter(this._qmarks)).map(([k, v]) => k);
-        let lowercaseMarks = marks.filter(function (x) /[a-z]/.test(x)).sort();
-        let uppercaseMarks = marks.filter(function (x) /[A-Z]/.test(x)).sort();
-        let numberMarks    = marks.filter(function (x) /[0-9]/.test(x)).sort();
+        let lowercaseMarks = marks.filter(x => /[a-z]/.test(x)).sort();
+        let uppercaseMarks = marks.filter(x => /[A-Z]/.test(x)).sort();
+        let numberMarks    = marks.filter(x => /[0-9]/.test(x)).sort();
 
         marks = Array.concat(lowercaseMarks, uppercaseMarks, numberMarks);
 
         liberator.assert(marks.length > 0, "No QuickMarks set");
 
         if (filter.length > 0) {
-            marks = marks.filter(function (qmark) filter.indexOf(qmark) >= 0);
+            marks = marks.filter(qmark => filter.indexOf(qmark) >= 0);
             liberator.assert(marks.length >= 0, "No matching QuickMarks for: " + filter);
         }
 
@@ -94,7 +94,7 @@ const QuickMarks = Module("quickmarks", {
     }
 }, {
 }, {
-    commands: function () {
+    commands() {
         commands.add(["delqm[arks]"],
             "Delete the specified QuickMarks",
             function (args) {
@@ -110,7 +110,7 @@ const QuickMarks = Module("quickmarks", {
             },
             {
                 bang: true,
-                completer: function (context) {
+                completer(context) {
                     context.title = ["QuickMark", "URL"];
                     context.completions = quickmarks._qmarks;
                 }
@@ -141,7 +141,7 @@ const QuickMarks = Module("quickmarks", {
                 quickmarks.list(filter);
             });
     },
-    mappings: function () {
+    mappings() {
         var myModes = config.browserModes;
 
         mappings.add(myModes,

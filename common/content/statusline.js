@@ -15,7 +15,7 @@
  * @param {Object} extraInfo
  */
 const StatusField = Class("StatusField", {
-    init: function (name, description, node, updater, extraInfo) {
+    init(name, description, node, updater, extraInfo) {
         this.name = name;
         this.description = description;
         if (typeof updater === "function")
@@ -58,17 +58,17 @@ const StatusField = Class("StatusField", {
         this.node.setAttribute("liberatorPosition", val);
         return true;
     },
-    update: function (value) {
+    update(value) {
         if (this._updater)
             this._updater(this.node, value);
     },
-    destroy: function () {
+    destroy() {
         this.node.parentNode.removeChild(this.node);
     },
 });
 
 const StatusLine = Module("statusline", {
-    init: function () {
+    init() {
         // our status bar fields
         this._statusfields = {};
         this._statuslineWidget = document.getElementById("liberator-status");
@@ -79,7 +79,7 @@ const StatusLine = Module("statusline", {
     /**
      * @see StatusField
      */
-    addField: function (name, description, node, updater, extraInfo) {
+    addField(name, description, node, updater, extraInfo) {
         if (name in this._statusfields)
             return this._statusfields[name];
 
@@ -94,7 +94,7 @@ const StatusLine = Module("statusline", {
         return this._statusfields[name] = field;
     },
 
-    removeField: function (name) {
+    removeField(name) {
         if (name in this._statusfields) {
             this._statusfields[name].destroy();
             return delete this._statusfields[name] && delete this[name];
@@ -102,7 +102,7 @@ const StatusLine = Module("statusline", {
         return false;
     },
 
-    sortFields: function (fieldNames) {
+    sortFields(fieldNames) {
         if (!fieldNames)
             fieldNames = options.get("status").values;
 
@@ -115,7 +115,7 @@ const StatusLine = Module("statusline", {
     },
 
     // update all fields of the statusline
-    update: function update() {
+    update() {
         let statusfields = this._statusfields;
         let fieldNames = options.get("status").values;
         this.sortFields(fieldNames);
@@ -126,7 +126,7 @@ const StatusLine = Module("statusline", {
     },
 
     // set the visibility of the statusline
-    setVisibility: function (request) {
+    setVisibility(request) {
         if ( typeof this.setVisibility.UPDATE == 'undefined' ) { // TODO proper initialization
             this.setVisibility.UPDATE = 0; // Apply current configuration
             this.setVisibility.SHOW   = 1; // Temporarily show statusline
@@ -215,14 +215,14 @@ const StatusLine = Module("statusline", {
      * @param {String} fieldname
      * @param {any} value
      */
-    updateField: function updateField (fieldname, value) {
+    updateField(fieldname, value) {
         var field = this._statusfields[fieldname];
         if (field)
             field.update(value);
     },
 }, {
 }, {
-    statusline: function () {
+    statusline() {
         statusline.addField("input", "Any partially entered key mapping", "liberator-status-input",
             /**
              * Set the contents of the status line's input buffer to the given
@@ -273,7 +273,7 @@ const StatusLine = Module("statusline", {
                 node.className = className;
                 node.setAttribute("tooltiptext", tooltip);
             }, {
-                openPopup: function (anchor) {
+                openPopup(anchor) {
                     var handler = window.gIdentityHandler;
                     if (typeof handler === "undefiend") // Thunderbird has none
                         return;
@@ -308,7 +308,7 @@ const StatusLine = Module("statusline", {
                         url = "[No Name]";
                 }
                 else {
-                    url = url.replace(RegExp("^liberator://help/(\\S+)#(.*)"), function (m, n1, n2) n1 + " " + decodeURIComponent(n2) + " [Help]")
+                    url = url.replace(RegExp("^liberator://help/(\\S+)#(.*)"), (m, n1, n2) => n1 + " " + decodeURIComponent(n2) + " [Help]")
                              .replace(RegExp("^liberator://help/(\\S+)"), "$1 [Help]");
                 }
 
@@ -346,7 +346,7 @@ const StatusLine = Module("statusline", {
              * Display the correct tabcount (e.g., [1/5]) on the status bar.
              *
              * @param {Element} node
-             * @param {bool} delayed When true, update count after a
+             * @param {boolean} delayed When true, update count after a
              *      brief timeout. Useful in the many cases when an
              *      event that triggers an update is broadcast before
              *      the tab state is fully updated.
@@ -354,7 +354,7 @@ const StatusLine = Module("statusline", {
             function updateTabCount (node, delayed) {
                 if (liberator.has("tabs")) {
                     if (delayed) {
-                        window.setTimeout(function() updateTabCount(node, false), 0);
+                        window.setTimeout(() => updateTabCount(node, false), 0);
                         return;
                     }
 
@@ -422,11 +422,11 @@ const StatusLine = Module("statusline", {
             "Define which information to show in the status bar",
             "stringlist", "input,location,bookmark,history,ssl,tabcount,position",
             {
-                setter: function setter(value) {
+                setter(value) {
                     statusline.sortFields(this.values);
                     return value;
                 },
-                completer: function completer(context) {
+                completer(context) {
                     var fields = statusline._statusfields;
                     return Object.keys(fields).map(name => [name, fields[name].description]);
                 },
@@ -436,11 +436,11 @@ const StatusLine = Module("statusline", {
             "Control the visibility of the statusline",
             "string", "auto",
             {
-                setter: function setter(value) {
+                setter(value) {
                     statusline.setVisibility(statusline.setVisibility.UPDATE);
                     return value;
                 },
-                completer: function completer(context) {
+                completer(context) {
                     return [
                         ["auto",    "Hide statusline in fullscreen automatically"],
                         ["visible", "Always show the statusline"],

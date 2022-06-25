@@ -12,7 +12,7 @@
  */
 const Services = Module("services", {
     ABOUT: "@mozilla.org/network/protocol/about;1?what=",
-    init: function () {
+    init() {
         this.classes = {};
         this.jsm = window.Services;
         let autoCompleteSearchQueryValue = "unifiedcomplete";
@@ -80,13 +80,13 @@ const Services = Module("services", {
         this.addClass("timer",     "@mozilla.org/timer;1",                      Ci.nsITimer);
     },
 
-    _create: function (classes, ifaces, meth) {
+    _create(classes, ifaces, meth) {
         try {
             let res = Cc[classes][meth || "getService"]();
             if (!ifaces)
                 return res.wrappedJSObject;
             ifaces = Array.concat(ifaces);
-            ifaces.forEach(function (iface) res.QueryInterface(iface));
+            ifaces.forEach(iface => res.QueryInterface(iface));
             return res;
         }
         catch (e) {
@@ -106,7 +106,7 @@ const Services = Module("services", {
      * @param {string} meth The name of the function used to instanciate
      *     the service.
      */
-    add: function (name, class_, ifaces, meth) {
+    add(name, class_, ifaces, meth) {
         this.services[name] = {"class_": class_, "iface": ifaces, "meth": meth};
     },
 
@@ -118,9 +118,8 @@ const Services = Module("services", {
      * @param {nsISupports|nsISupports[]} ifaces The interface or array of
      *     interfaces implemented by this class.
      */
-    addClass: function (name, class_, ifaces) {
-        const self = this;
-        return this.classes[name] = function () self._create(class_, ifaces, "createInstance");
+    addClass(name, class_, ifaces) {
+        return this.classes[name] = () => this._create(class_, ifaces, "createInstance");
     },
 
     /**
@@ -128,7 +127,7 @@ const Services = Module("services", {
      *
      * @param {string} name The service's cache key.
      */
-    get: function (name) {
+    get(name) {
         if (this.jsm.hasOwnProperty(name))
             return this.jsm[name];
 
@@ -149,15 +148,15 @@ const Services = Module("services", {
      *
      * @param {string} name The class's cache key.
      */
-    create: function (name) this.classes[name]()
+    create(name) { return this.classes[name](); }
 },
 window.Services,
 {
-    completion: function () {
+    completion() {
         JavaScript.setCompleter(this.get, [
-            function () Object.keys(services.jsm).concat(Object.keys(services.services)).map(function(key) [key, ""])
+            () => Object.keys(services.jsm).concat(Object.keys(services.services)).map(key => [key, ""])
         ]);
-        JavaScript.setCompleter(this.create, [function () Object.keys(services.classes).map(c => [c, ""])]);
+        JavaScript.setCompleter(this.create, [() => Object.keys(services.classes).map(c => [c, ""])]);
     }
 });
 
