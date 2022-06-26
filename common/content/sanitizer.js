@@ -108,10 +108,6 @@ const Sanitizer = Module("sanitizer", {
                     let items = args.map(Sanitizer.argToPref);
                     for (let item of items) {
 
-                          if (services.get("vc").compare(VERSION, "45.*") != 1) {
-                              sanitizer.canClearItem(item, function () {});
-                          }
-
                           try {
                               sanitizer.clearItem(item);
                           }

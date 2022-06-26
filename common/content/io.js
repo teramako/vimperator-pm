@@ -356,16 +356,12 @@ const IO = Module("io", {
     },
 
     destroy() {
-        if (services.get("vc").compare(VERSION, "26.0a1") < 0) {
-            services.get("downloads").removeListener(this.downloadListener);
-        } else {
-            let {Downloads} = Cu.import("resource://gre/modules/Downloads.jsm", {});
-            let downloadListener = this.downloadListener;
-            Downloads.getList(Downloads.ALL)
-                .then(function (downloadList) {
-                    downloadList.removeView(downloadListener);
-                });
-        }
+        let {Downloads} = Cu.import("resource://gre/modules/Downloads.jsm", {});
+        let downloadListener = this.downloadListener;
+        Downloads.getList(Downloads.ALL)
+            .then(function (downloadList) {
+                downloadList.removeView(downloadListener);
+            });
         for (let [, plugin] in Iterator(plugins.contexts))
             if (plugin.onUnload)
                 plugin.onUnload();
@@ -1002,22 +998,11 @@ lookup:
 
         completion.charset = function (context) {
             context.anchored = false;
-            if (services.get("vc").compare(Application.version, "32") < 0) {
-                context.generate = function () {
-                    let names = util.Array(
-                        "more1 more2 more3 more4 more5 static".split(" ").map(key => options.getPref("intl.charsetmenu.browser." + key).split(', '))
-                    ).flatten().uniq();
-                    let bundle = document.getElementById("liberator-charset-bundle");
-                    return names.map(name => [name, bundle.getString(name.toLowerCase() + ".title")]);
-                };
-            }
-            else {
-                context.generate = function () {
-                    let {CharsetMenu} = Cu.import("resource://gre/modules/CharsetMenu.jsm", {});
-                    let data = CharsetMenu.getData();
-                    return data.pinnedCharsets.concat(data.otherCharsets).map(o => [o.value, o.label]);
-                };
-            }
+            context.generate = function () {
+                let {CharsetMenu} = Cu.import("resource://gre/modules/CharsetMenu.jsm", {});
+                let data = CharsetMenu.getData();
+                return data.pinnedCharsets.concat(data.otherCharsets).map(function (o) [o.value, o.label]);
+            };
         };
 
         completion.directory = function directory(context, full) {

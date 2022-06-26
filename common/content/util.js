@@ -433,20 +433,6 @@ const Util = Module("util", {
             null
         );
 
-        if (services.get("vc").compare(VERSION, "33") >= 0
-            && Cu.isXrayWrapper(result)) {
-            let xr = result;
-
-            if (asIterator) {
-                result = { iterateNext() { return xr.iterateNext(); } };
-            } else {
-                result = {
-                    snapshotItem(num) { return xr.snapshotItem(num); },
-                    get snapshotLength() { return xr.snapshotLength; },
-                };
-            }
-        }
-
         result[Symbol.iterator] = asIterator
             ? function* () { let elem; while ((elem = this.iterateNext())) yield elem; }
             : function* () { for (let i = 0; i < this.snapshotLength; i++) yield this.snapshotItem(i); }
