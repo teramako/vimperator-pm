@@ -114,7 +114,7 @@ const JavaScript = Module("javascript", {
         else {
             completions = Array.from(this.iter(obj, toplevel));
             if (!toplevel)
-                completions = util.Array.uniq(completions, true);
+                completions = [...new Set(completions)];
         }
 
         // Add keys for sorting later.

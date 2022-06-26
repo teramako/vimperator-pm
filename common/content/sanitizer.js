@@ -65,7 +65,7 @@ const Sanitizer = Module("sanitizer", {
         return errors;
     },
 
-    get prefNames() { return util.Array.flatten([this.prefDomain, this.prefDomain2].map(options.allPrefs)); }
+    get prefNames() { return [this.prefDomain, this.prefDomain2].map(options.allPrefs).flat(); }
 }, {
     argToPref(arg) { return ["commandLine", "offlineApps", "siteSettings"].filter(pref => pref.toLowerCase() == arg)[0] || arg; },
     prefToArg(pref) { return pref.toLowerCase().replace(/.*\./, ""); }

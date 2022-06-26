@@ -471,11 +471,11 @@ const Mappings = Module("mappings", {
 
             function urlsCompleter (modes, current) {
                 return function () {
-                    let completions = util.Array.uniq(
+                    let completions = [...new Set(
                         Array.from(mappings.getUserIterator(modes))
                              .filter(m => m.matchingUrls)
                              .map(m => m.matchingUrls.source)
-                    ).map(re => [re, re]);
+                    )].map(re => [re, re]);
                     if (current) {
                         if (buffer.URL)
                             completions.unshift([util.escapeRegex(buffer.URL), "Current buffer URL"]);

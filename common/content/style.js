@@ -557,10 +557,9 @@ Module("styles", {
     requires: ["config", "liberator", "storage", "util"],
 
     init: function () {
-        let array = util.Array;
         update(Styles.prototype, {
             get sites() {
-                return array(Array.from(this.userSheets).map(([k, v]) => v.sites)).flatten().uniq().__proto__;
+                return [...new Set(Array.from(this.userSheets).map(([k, v]) => v.sites).flat())];
             },
             completeSite: function (context, content) {
                 context.anchored = false;
@@ -826,11 +825,9 @@ Module("highlight", {
         completion.colorScheme = function colorScheme(context) {
             context.title = ["Color Scheme", "Runtime Path"];
             context.keys = { text(f) { return f.leafName.replace(/\.vimp$/, ""); }, description: ".parent.path" };
-            context.completions = util.Array.flatten(
-                io.getRuntimeDirectories("colors").map(
-                    dir => dir.readDirectory().filter(
-                        file => /\.vimp$/.test(file.leafName))))
-
+            context.completions = io.getRuntimeDirectories("colors")
+                .map(dir => dir.readDirectory().filter(file => /\.vimp$/.test(file.leafName)))
+                .flat();
         };
 
         completion.highlightGroup = function highlightGroup(context) {

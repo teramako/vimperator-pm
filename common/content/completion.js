@@ -227,7 +227,7 @@ const CompletionContext = Class("CompletionContext", {
                     __proto__: item
                 }));
             });
-            return { start: minStart, items: util.Array.flatten(items),
+            return { start: minStart, items: items.flat(),
                 get longestSubstring() {
                     var value = this.longestAllSubstring;
                     Object.defineProperty(this, "longestSubstring", { value: value});
@@ -252,7 +252,7 @@ const CompletionContext = Class("CompletionContext", {
         let substrings = lists.reduce((res, list) => res.filter(str => list.some(s => s.substring(0, str.length) == str)), lists.pop());
         if (!substrings) // FIXME: How is this undefined?
             return [];
-        return util.Array.uniq(Array.slice(substrings));
+        return [...new Set(Array.slice(substrings))];
     },
     // Temporary
     get longestAllSubstring() {

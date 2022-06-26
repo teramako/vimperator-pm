@@ -513,7 +513,7 @@ const Buffer = Module("buffer", {
             return String(selection);
         }
 
-        return util.Array.compact(buffer.getAllFrames().map(_getCurrentWord)).join("\n");
+        return buffer.getAllFrames().map(_getCurrentWord).filter(word => word != null).join("\n");
     },
 
     /**

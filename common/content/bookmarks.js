@@ -537,9 +537,7 @@ const Bookmarks = Module("bookmarks", {
             args.completeFilter = have.pop();
 
             let prefix = filter.substr(0, filter.length - args.completeFilter.length);
-            let tags = util.Array.uniq(
-                util.Array.flatten(bookmarks._cache.bookmarks.map(b => b.tags))
-            );
+            const tags = [...new Set(bookmarks._cache.bookmarks.map(b => b.tags).flat())];
 
             return tags.filter(tag => have.indexOf(tag) < 0)
                        .map(tag => [prefix + tag, tag]);
@@ -554,9 +552,7 @@ const Bookmarks = Module("bookmarks", {
         }
 
         function keyword(context, args) {
-            let keywords = util.Array.uniq(
-                util.Array.flatten(bookmarks._cache.keywords.map(b => b.keyword))
-            );
+            const keywords = [...new Set(bookmarks._cache.bookmarks.filter(b => !!b.keyword).map(b => b.keyword))];
             return keywords.map(kw => [kw, kw]);
         }
 

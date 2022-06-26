@@ -899,8 +899,8 @@ lookup:
 
                 let lines = Array.from(iter(commands))
                                  .filter(cmd => cmd.serial)
-                                 .map(cmd => cmd.serial().map(commands.commandToString));
-                lines = util.Array.flatten(lines);
+                                 .map(cmd => cmd.serial().map(commands.commandToString))
+                                 .flat();
 
                 // source a user .vimperatorrc file
                 lines.unshift('"' + liberator.version + "\n");
@@ -1001,7 +1001,7 @@ lookup:
             context.generate = function () {
                 let {CharsetMenu} = Cu.import("resource://gre/modules/CharsetMenu.jsm", {});
                 let data = CharsetMenu.getData();
-                return data.pinnedCharsets.concat(data.otherCharsets).map(function (o) [o.value, o.label]);
+                return data.pinnedCharsets.concat(data.otherCharsets).map(o => [o.value, o.label]);
             };
         };
 
@@ -1079,7 +1079,7 @@ lookup:
                     }
                 }
 
-                return util.Array.flatten(commands);
+                return commands.flat();
             };
         };
 

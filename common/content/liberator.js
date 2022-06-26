@@ -601,7 +601,7 @@ const Liberator = Module("liberator", {
         });
 
         // Scrape the tags from the rest of the help files.
-        util.Array.flatten(files).forEach(function (file) {
+        files.flat().forEach(function (file) {
             findHelpFile(file).forEach(function (doc) {
                 addTags(file, doc);
             });
@@ -1529,13 +1529,13 @@ const Liberator = Module("liberator", {
                 if (extensions.length > 0) {
                     let list = template.tabular(
                         ["Name", "Version", "Status", "Description"],
-                        util.Array.itervalues(extensions.map(e =>
+                        extensions.map(e =>
                             [template.icon(e, e.name),
                              e.version,
                              e.enabled ? xml`<span highlight="Enabled">enabled</span>`
                                        : xml`<span highlight="Disabled">disabled</span>`,
                              e.description]
-                        ))
+                        )
                     );
 
                     commandline.echo(list, commandline.HL_NORMAL, commandline.FORCE_MULTILINE);
