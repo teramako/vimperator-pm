@@ -330,21 +330,11 @@ var Config = Module("config", ConfigBase, {
             "string", "about:newtab",
             {
                 setter: function (value) {
-                    if (services.get("vc").compare(VERSION, "41.*") == -1) {
-                        options.setPref("browser.newtab.url", value);
-                    } else {
-                        Components.utils.import("resource:///modules/NewTabURL.jsm");
-                        NewTabURL.override(value);
-                    }
+                    options.setPref("browser.newtab.url", value);
                     return value;
                 },
                 getter: function () {
-                    if (services.get("vc").compare(VERSION, "41.*") == -1) {
-                        return options.getPref("browser.newtab.url");
-                    } else {
-                        Components.utils.import("resource:///modules/NewTabURL.jsm");
-                        return NewTabURL.get();
-                    }
+                    return options.getPref("browser.newtab.url");
                 }
             });
     }
