@@ -1,6 +1,6 @@
 #### configuration
 
-VERSION        = 3.15.0
+VERSION        = 3.15.1
 NAME           = vimperator
 UUID           = vimperator@mozdev.org
 MIN_VERSION    = 38.0
