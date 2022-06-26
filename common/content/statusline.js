@@ -417,7 +417,7 @@ const StatusLine = Module("statusline", {
             });
 
     },
-    options: function () {
+    options() {
         options.add(["status"],
             "Define which information to show in the status bar",
             "stringlist", "input,location,bookmark,history,ssl,tabcount,position",
