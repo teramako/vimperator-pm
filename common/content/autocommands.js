@@ -14,11 +14,11 @@ const AutoCommand = Struct("event", "pattern", "command");
 const AutoCommands = Module("autocommands", {
     requires: ["config"],
 
-    init: function () {
+    init() {
         this._store = [];
     },
 
-    __iterator__: function () util.Array.itervalues(this._store),
+    *[Symbol.iterator]() { yield* this._store; },
 
     /**
      * Adds a new autocommand. <b>cmd</b> will be executed when one of the
@@ -30,7 +30,7 @@ const AutoCommands = Module("autocommands", {
      * @param {string} regex The URL pattern to match against the buffer URL.
      * @param {string} cmd The Ex command to run.
      */
-    add: function (events, regex, cmd) {
+    add(events, regex, cmd) {
         if (typeof events == "string")
             events = events.split(",");
 
@@ -47,8 +47,8 @@ const AutoCommands = Module("autocommands", {
      * @param {string} regex The URL pattern filter.
      * @returns {AutoCommand[]}
      */
-    get: function (event, regex) {
-        return this._store.filter(function (autoCmd) AutoCommands.matchAutoCmd(autoCmd, event, regex));
+    get(event, regex) {
+        return this._store.filter(autoCmd => AutoCommands.matchAutoCmd(autoCmd, event, regex));
     },
 
     /**
@@ -58,8 +58,8 @@ const AutoCommands = Module("autocommands", {
      * @param {string} event The event name filter.
      * @param {string} regex The URL pattern filter.
      */
-    remove: function (event, regex) {
-        this._store = this._store.filter(function (autoCmd) !AutoCommands.matchAutoCmd(autoCmd, event, regex));
+    remove(event, regex) {
+        this._store = this._store.filter(autoCmd => !AutoCommands.matchAutoCmd(autoCmd, event, regex));
     },
 
     /**
@@ -69,7 +69,7 @@ const AutoCommands = Module("autocommands", {
      * @param {string} event The event name filter.
      * @param {string} regex The URL pattern filter.
      */
-    list: function (event, regex) {
+    list(event, regex) {
         let cmds = {};
 
         // XXX
@@ -83,11 +83,11 @@ const AutoCommands = Module("autocommands", {
         let list = template.genericOutput("Auto Commands",
             xml`<table>
                 ${
-                    template.map2(xml, cmds, function ([event, items])
+                    template.map2(xml, cmds, ([event, items]) =>
                     xml`<tr highlight="Title">
                         <td colspan="2">${event}</td>
                     </tr>${
-                        template.map2(xml, items, function (item)
+                        template.map2(xml, items, item =>
                         xml`<tr>
                             <td>&#160;${item.pattern.source}</td>
                             <td>${item.command}</td>
@@ -106,11 +106,11 @@ const AutoCommands = Module("autocommands", {
      * @param {string} event The event to fire.
      * @param {Object} args The args to pass to each autocommand.
      */
-    trigger: function (event, args) {
+    trigger(event, args) {
         if (options.get("eventignore").has("all", event))
             return;
 
-        let autoCmds = this._store.filter(function (autoCmd) autoCmd.event == event);
+        let autoCmds = this._store.filter(autoCmd => autoCmd.event == event);
 
         let lastPattern = null;
         let url = args.url || "";
@@ -138,11 +138,11 @@ const AutoCommands = Module("autocommands", {
         }
     }
 }, {
-    matchAutoCmd: function (autoCmd, event, regex) {
+    matchAutoCmd(autoCmd, event, regex) {
         return (!event || autoCmd.event == event) && (!regex || autoCmd.pattern.source == regex);
     }
 }, {
-    commands: function () {
+    commands() {
         commands.add(["au[tocmd]"],
             "Execute commands automatically on events",
             function (args) {
@@ -158,11 +158,11 @@ const AutoCommands = Module("autocommands", {
 
                 if (event) {
                     // NOTE: event can only be a comma separated list for |:au {event} {pat} {cmd}|
-                    let validEvents = config.autocommands.map(function (event) event[0]);
+                    let validEvents = config.autocommands.map(event => event[0]);
                     validEvents.push("*");
 
                     events = event.split(",");
-                    liberator.assert(events.every(function (event) validEvents.indexOf(event) >= 0),
+                    liberator.assert(events.every(event => validEvents.indexOf(event) >= 0),
                         "No such group or event: " + event);
                 }
 
@@ -187,7 +187,7 @@ const AutoCommands = Module("autocommands", {
                 }
             }, {
                 bang: true,
-                completer: function (context, args) {
+                completer(context, args) {
                     if (args.length == 1)
                         return completion.autocmdEvent(context);
                     if (args.length == 3)
@@ -218,14 +218,14 @@ const AutoCommands = Module("autocommands", {
 
                     let [event, url] = args;
                     let defaultURL = url || buffer.URL;
-                    let validEvents = config.autocommands.map(function (e) e[0]);
+                    let validEvents = config.autocommands.map(e => e[0]);
 
                     // TODO: add command validators
                     liberator.assert(event != "*",
                         "Cannot execute autocommands for ALL events");
                     liberator.assert(validEvents.indexOf(event) >= 0,
                         "No such group or event: " + args);
-                    liberator.assert(autocommands.get(event).some(function (c) c.pattern.test(defaultURL)),
+                    liberator.assert(autocommands.get(event).some(c => c.pattern.test(defaultURL)),
                         "No matching autocommands");
 
                     if (this.name == "doautoall" && liberator.has("tabs")) {
@@ -243,12 +243,12 @@ const AutoCommands = Module("autocommands", {
                         autocommands.trigger(event, { url: defaultURL });
                 }, {
                     argCount: "*", // FIXME: kludged for proper error message should be "1".
-                    completer: function (context) completion.autocmdEvent(context)
+                    completer(context) { return completion.autocmdEvent(context); }
                 });
         });
     },
-    completion: function () {
-        JavaScript.setCompleter(this.get, [function () config.autocommands]);
+    completion() {
+        JavaScript.setCompleter(this.get, [() => config.autocommands]);
 
         completion.autocmdEvent = function autocmdEvent(context) {
             context.completions = config.autocommands;
@@ -259,12 +259,12 @@ const AutoCommands = Module("autocommands", {
             context.completions = Array.from(events.getMacros());
         };
     },
-    options: function () {
+    options() {
         options.add(["eventignore", "ei"],
             "List of autocommand event names which should be ignored",
             "stringlist", "",
             {
-                completer: function () config.autocommands.concat([["all", "All events"]])
+                completer() { return config.autocommands.concat([["all", "All events"]]); }
             });
 
         options.add(["focuscontent", "fc"],

@@ -16,7 +16,7 @@
 const Tabs = Module("tabs", {
     requires: ["config"],
 
-    init: function () {
+    init() {
         this.updateSelectionHistory([config.tabbrowser.mCurrentTab, null]);
 
         // used for the "gb" and "gB" mappings to remember the last :buffer[!] command
@@ -25,11 +25,11 @@ const Tabs = Module("tabs", {
 
     },
 
-    _updateTabCount: function () {
+    _updateTabCount() {
         statusline.updateField("tabcount", true);
     },
 
-    _onTabSelect: function () {
+    _onTabSelect() {
         // TODO: is all of that necessary?
         //       I vote no. --Kris
         modes.reset();
@@ -61,7 +61,7 @@ const Tabs = Module("tabs", {
     /**
      * @property {number} The number of tabs in the current window.
      */
-    get count() config.tabbrowser.visibleTabs.length,
+    get count() { return config.tabbrowser.visibleTabs.length; },
 
     /**
      * @property {Object} The local options store for the current tab.
@@ -86,7 +86,7 @@ const Tabs = Module("tabs", {
     //        property doesn't. And the property is so oft-used that it's
     //        convenient. To the former question, because I think this is mainly
     //        useful for autocommands, and they get index arguments. --Kris
-    getLocalStore: function (tabIndex) {
+    getLocalStore(tabIndex) {
         let tab = this.getTab(tabIndex);
         if (!tab.liberatorStore)
             tab.liberatorStore = {};
@@ -97,13 +97,13 @@ const Tabs = Module("tabs", {
      * @property {Object} The local state store for the currently selected
      *     tab.
      */
-    get localStore() this.getLocalStore(),
+    get localStore() { return this.getLocalStore(); },
 
     /**
      * @property {Object[]} The array of closed tabs for the current
      *     session.
      */
-    get closedTabs() JSON.parse(services.get("sessionStore").getClosedTabData(window)),
+    get closedTabs() { return JSON.parse(services.get("sessionStore").getClosedTabData(window)); },
 
     /**
      * Returns the index of <b>tab</b> or the index of the currently
@@ -113,7 +113,7 @@ const Tabs = Module("tabs", {
      * @param {Object} tab A tab from the current tab list.
      * @returns {number}
      */
-    index: function (tab) {
+    index(tab) {
         if (tab)
             return Array.indexOf(config.tabbrowser.visibleTabs, tab);
         else
@@ -124,11 +124,11 @@ const Tabs = Module("tabs", {
     /**
      * Returns an array of all tabs in the tab list.
      *
-     * @returns {Object[]}
+     * @returns {[number, string, string][]}
      */
     // FIXME: why not return the tab element?
     //      : unused? Remove me.
-    get: function () {
+    get() {
         let buffers = [];
         for (const [i, browser] of this.browsers()) {
             let title = browser.contentTitle || "(Untitled)";
@@ -146,7 +146,7 @@ const Tabs = Module("tabs", {
      *     document.
      */
     // FIXME: Only called once...necessary?
-    getContentIndex: function (content) {
+    getContentIndex(content) {
         for (const [i, browser] of this.browsers()) {
             if (browser.contentWindow == content || browser.contentDocument == content)
                 return i;
@@ -162,7 +162,7 @@ const Tabs = Module("tabs", {
      * @param {number} index The index of the tab required.
      * @returns {Object}
      */
-    getTab: function (index) {
+    getTab(index) {
         if (index != undefined)
             return config.tabbrowser.mTabs[index];
         else
@@ -176,7 +176,7 @@ const Tabs = Module("tabs", {
      *     document title or URL.
      * @param {boolean} showAll
      */
-    list: function (filter, showAll) {
+    list(filter, showAll) {
         completion.listCompleter("buffer", filter, null, completion.buffer[showAll ? "ALL" : "VISIBLE"]);
     },
 
@@ -189,7 +189,7 @@ const Tabs = Module("tabs", {
      *     the destination position to wrap around the start/end of the tab
      *     list.
      */
-    move: function (tab, spec, wrap) {
+    move(tab, spec, wrap) {
         let index = Tabs.indexFromSpec(spec, wrap, false);
         index = tabs.getTab(index)._tPos;
         config.tabbrowser.moveTabTo(tab, index);
@@ -211,7 +211,7 @@ const Tabs = Module("tabs", {
      * @param {boolean} force Close even if the tab is an app tab.
      */
     // FIXME: what is quitOnLastTab {1,2} all about then, eh? --djk
-    remove: function (tab, count, orientation, forceQuitOnLastTab, force) {
+    remove(tab, count, orientation, forceQuitOnLastTab, force) {
         let vTabs = config.tabbrowser.visibleTabs;
         let removeOrBlankTab = function (tab) {
             if (vTabs.length > 1)
@@ -303,7 +303,7 @@ const Tabs = Module("tabs", {
      *
      * @param {Object} tab The tab to keep.
      */
-    keepOnly: function (tab) {
+    keepOnly(tab) {
         config.tabbrowser.removeAllTabsBut(tab);
     },
 
@@ -316,7 +316,7 @@ const Tabs = Module("tabs", {
      *     list.
      * @param {boolean} allTabs
      */
-    select: function (spec, wrap, allTabs) {
+    select(spec, wrap, allTabs) {
         let index = Tabs.indexFromSpec(spec, wrap, allTabs);
         // FIXME:
         if (index == -1)
@@ -332,7 +332,7 @@ const Tabs = Module("tabs", {
      * @param {boolean} bypassCache Whether to bypass the cache when
      *     reloading.
      */
-    reload: function (tab, bypassCache) {
+    reload(tab, bypassCache) {
         if (bypassCache) {
             const flags = Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_PROXY | Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
             config.tabbrowser.getBrowserForTab(tab).reloadWithFlags(flags);
@@ -347,7 +347,7 @@ const Tabs = Module("tabs", {
      * @param {boolean} bypassCache Whether to bypass the cache when
      *     reloading.
      */
-    reloadAll: function (bypassCache) {
+    reloadAll(bypassCache) {
         if (bypassCache) {
             for (let i = 0; i < config.tabbrowser.mTabs.length; i++) {
                 try {
@@ -368,7 +368,7 @@ const Tabs = Module("tabs", {
      *
      * @param {Object} tab The tab to stop loading.
      */
-    stop: function (tab) {
+    stop(tab) {
         if (config.stop)
             config.stop(tab);
         else
@@ -378,7 +378,7 @@ const Tabs = Module("tabs", {
     /**
      * Stops loading all tabs.
      */
-    stopAll: function () {
+    stopAll() {
         for (const [, browser] of this.browsers())
             browser.stop();
     },
@@ -388,7 +388,7 @@ const Tabs = Module("tabs", {
      * @param {string} buffer
      * @return {array} array of tabs
      */
-    getTabsFromBuffer: function (buffer) {
+    getTabsFromBuffer(buffer) {
         if (!buffer || typeof buffer != "string")
             return [];
 
@@ -433,7 +433,7 @@ const Tabs = Module("tabs", {
      *
      */
     // FIXME: help!
-    switchTo: function (buffer, allowNonUnique, count, reverse) {
+    switchTo(buffer, allowNonUnique, count, reverse) {
         if (buffer == "")
             return;
 
@@ -480,7 +480,7 @@ const Tabs = Module("tabs", {
      * @param {Object} tab The tab to clone.
      * @param {boolean} activate Whether to select the newly cloned tab.
      */
-    cloneTab: function (tab, activate) {
+    cloneTab(tab, activate) {
         let newTab = config.tabbrowser.addTab();
         Tabs.copyTab(newTab, tab);
 
@@ -496,7 +496,7 @@ const Tabs = Module("tabs", {
      *
      * @param {Object} tab The tab to detach.
      */
-    detachTab: function (tab) {
+    detachTab(tab) {
         if (!tab)
             tab = config.tabbrowser.mTabContainer.selectedItem;
 
@@ -507,7 +507,7 @@ const Tabs = Module("tabs", {
     /**
      * Selects the alternate tab.
      */
-    selectAlternateTab: function () {
+    selectAlternateTab() {
         let alternate = tabs.alternate;
         liberator.assert(alternate != null && tabs.getTab() != alternate, "No alternate page");
 
@@ -525,7 +525,7 @@ const Tabs = Module("tabs", {
      * @param {Array(Object)} tabs The current and alternate tab.
      * @see tabs#alternate
      */
-    updateSelectionHistory: function (tabs) {
+    updateSelectionHistory(tabs) {
         var tab1, tab2;
         if (tabs && tabs.length > 1) {
             tab1 = tabs[0] ? Cu.getWeakReference(tabs[0]) : null,
@@ -538,7 +538,7 @@ const Tabs = Module("tabs", {
         this._alternates = [tab1, tab2];
     }
 }, {
-    copyTab: function (to, from) {
+    copyTab(to, from) {
         if (!from)
             from = config.tabbrowser.mTabContainer.selectedItem;
 
@@ -556,7 +556,7 @@ const Tabs = Module("tabs", {
      * @param wrap
      * @param allTabs
      */
-    indexFromSpec: function (spec, wrap, allTabs) {
+    indexFromSpec(spec, wrap, allTabs) {
         let tabs =     allTabs ? config.tabbrowser.mTabs : config.tabbrowser.visibleTabs;
         let position = allTabs ?
             config.tabbrowser.mTabContainer.selectedIndex :
@@ -586,7 +586,7 @@ const Tabs = Module("tabs", {
         return tabs[position]._tPos;
     }
 }, {
-    commands: function () {
+    commands() {
         commands.add(["bd[elete]", "bw[ipeout]", "bun[load]", "tabc[lose]"],
             "Delete current buffer",
             function (args) {
@@ -653,7 +653,7 @@ const Tabs = Module("tabs", {
                          ["left", "Select the tab to the left"],
                          ["right", "Select the tab to the right"]]],
                 ],
-                completer: function (context) completion.buffer(context),
+                completer(context) { completion.buffer(context); },
                 literal: 0
             });
 
@@ -670,7 +670,7 @@ const Tabs = Module("tabs", {
                 }
             }, {
                 argCount: "+",
-                completer: function (context) completion.ex(context),
+                completer(context) { completion.ex(context); },
                 literal: 0
             });
 
@@ -686,7 +686,7 @@ const Tabs = Module("tabs", {
                 }
             }, {
                 argCount: "+",
-                completer: function (context) completion.ex(context),
+                completer(context) { completion.ex(context); },
                 literal: 0
             });
 
@@ -700,13 +700,13 @@ const Tabs = Module("tabs", {
                 }
             }, {
                 argCount: "1",
-                completer: function (context) completion.ex(context),
+                completer(context) { completion.ex(context); },
                 literal: 0
             });
 
         commands.add(["tabl[ast]", "bl[ast]"],
             "Switch to the last tab",
-            function () tabs.select("$", false),
+            function () { tabs.select("$", false); },
             { argCount: "0" });
 
         // TODO: "Zero count" if 0 specified as arg
@@ -788,7 +788,7 @@ const Tabs = Module("tabs", {
                     argCount: "?",
                     bang: true,
                     count: true,
-                    completer: function (context) completion.buffer(context, completion.buffer.ALL),
+                    completer(context) { completion.buffer(context, completion.buffer.ALL); },
                     literal: 0
                 });
 
@@ -855,8 +855,8 @@ const Tabs = Module("tabs", {
                         liberator.open("", { where: where });
                 }, {
                     bang: true,
-                    canonicalize: function (cmd) cmd.replace(/^(to?|tope?|topen|tabopen|tabnew)\b/, 'open'),
-                    completer: function (context) completion.url(context),
+                    canonicalize(cmd) { return cmd.replace(/^(to?|tope?|topen|tabopen|tabnew)\b/, 'open'); },
+                    completer(context) { completion.url(context); },
                     literal: 0,
                     privateData: true
                 });
@@ -893,10 +893,10 @@ const Tabs = Module("tabs", {
             commands.add(["taba[ttach]"],
                 "Attach the current tab to another window",
                 function (args) {
-                    liberator.assert(args.length <= 2 && !args.some(function (i) !/^\d+$/.test(i)),
+                    liberator.assert(args.length <= 2 && !args.some(i => !/^\d+$/.test(i)),
                         "Trailing characters");
 
-                    let [winIndex, tabIndex] = args.map(function(i) { return parseInt(i, 10) });
+                    let [winIndex, tabIndex] = args.map(i => parseInt(i, 10));
                     let win = liberator.windows[winIndex - 1];
 
                     liberator.assert(win, "Window " + winIndex + " does not exist");
@@ -917,9 +917,9 @@ const Tabs = Module("tabs", {
                     browser.swapBrowsersAndCloseOther(dummy, config.tabbrowser.mCurrentTab);
                 }, {
                     argCount: "+",
-                    completer: function (context, args) {
+                    completer(context, args) {
                         if (args.completeArg == 0) {
-                            context.filters.push(function ({ item: win }) win != window);
+                            context.filters.push(({ item: win }) => win != window);
                             completion.window(context);
                         }
                     }
@@ -949,11 +949,11 @@ const Tabs = Module("tabs", {
                     }
                 }, {
                     argCount: "?",
-                    completer: function (context) {
+                    completer(context) {
                         context.anchored = false;
                         context.compare = CompletionContext.Sort.unsorted;
                         context.filters = [CompletionContext.Filter.textDescription];
-                        context.keys = { text: function ([i, { state: s }]) (i + 1) + ": " + s.entries[s.index - 1].url, description: "[1].title", icon: "[1].image" };
+                        context.keys = { text([i, { state: s }]) { return (i + 1) + ": " + s.entries[s.index - 1].url; }, description: "[1].title", icon: "[1].image" };
                         context.completions = Iterator(tabs.closedTabs);
                     },
                     count: true,
@@ -978,19 +978,19 @@ const Tabs = Module("tabs", {
                 { argCount: "0" });
         }
     },
-    completion: function () {
+    completion() {
         completion.addUrlCompleter("t",
             "Open tabs",
             completion.buffer);
     },
-    events: function () {
+    events() {
         let tabContainer = config.tabbrowser.mTabContainer;
         ["TabMove", "TabOpen", "TabClose"].forEach(function (event) {
             events.addSessionListener(tabContainer, event, this.closure._updateTabCount, false);
         }, this);
         events.addSessionListener(tabContainer, "TabSelect", this.closure._onTabSelect, false);
     },
-    mappings: function () {
+    mappings() {
         mappings.add([modes.NORMAL], ["g0", "g^"],
             "Go to the first tab",
             function (count) { tabs.select(0); });
@@ -1073,38 +1073,42 @@ const Tabs = Module("tabs", {
                 { count: true });
         }
     },
-    options: function () {
+    options() {
         if (config.hasTabbrowser) {
             options.add(["activate", "act"],
                 "Define when tabs are automatically activated",
                 "stringlist", "addons,downloads,extoptions,help,homepage,quickmark,tabopen,paste",
                 {
-                    completer: function (context) [
-                        ["all", "All tabs created by any commands and mappings"],
-                        ["addons", ":addo[ns] command"],
-                        ["downloads", ":downl[oads] command"],
-                        ["extoptions", ":exto[ptions] command"],
-                        ["help", ":h[elp] command"],
-                        ["homepage", "gH mapping"],
-                        ["quickmark", "go and gn mappings"],
-                        ["tabopen", ":tabopen[!] command"],
-                        ["paste", "P and gP mappings"]
-                    ]
+                    completer(context) {
+                        return [
+                            ["all", "All tabs created by any commands and mappings"],
+                            ["addons", ":addo[ns] command"],
+                            ["downloads", ":downl[oads] command"],
+                            ["extoptions", ":exto[ptions] command"],
+                            ["help", ":h[elp] command"],
+                            ["homepage", "gH mapping"],
+                            ["quickmark", "go and gn mappings"],
+                            ["tabopen", ":tabopen[!] command"],
+                            ["paste", "P and gP mappings"]
+                        ];
+                    }
                 });
 
             options.add(["newtab"],
                 "Define which commands should output in a new tab by default",
                 "stringlist", "",
                 {
-                    completer: function (context) [
-                        ["all", "All commands"],
-                        ["addons", ":addo[ns] command"],
-                        ["downloads", ":downl[oads] command"],
-                        ["extoptions", ":exto[ptions] command"],
-                        ["help", ":h[elp] command"],
-                        ["javascript", ":javascript! or :js! command"],
-                        ["prefs", ":pref[erences]! or :prefs! command"]
-                    ]
+                    completer(context) {
+                        return [
+                            ["all", "All commands"],
+                            ["addons", ":addo[ns] command"],
+                            ["downloads", ":downl[oads] command"],
+                            ["extoptions", ":exto[ptions] command"],
+                            ["help", ":h[elp] command"],
+                            ["javascript", ":javascript! or :js! command"],
+                            ["prefs", ":pref[erences]! or :prefs! command"]
+                        ];
+                    }
                 });
 
             options.add(["passthrough"],
@@ -1115,7 +1119,7 @@ const Tabs = Module("tabs", {
                 "Where to show requested popup windows",
                 "stringlist", "tab",
                 {
-                    setter: function (value) {
+                    setter(value) {
                         let [open, restriction] = [1, 0];
                         for (let opt of this.parseValues(value)) {
                             if (opt == "tab")
@@ -1130,18 +1134,20 @@ const Tabs = Module("tabs", {
                         options.safeSetPref("browser.link.open_newwindow.restriction", restriction, "See 'popups' option.");
                         return value;
                     },
-                    completer: function (context) [
-                        ["tab",     "Open popups in a new tab"],
-                        ["window",  "Open popups in a new window"],
-                        ["resized", "Open resized popups in a new window"]
-                    ]
+                    completer(context) {
+                        return [
+                            ["tab",     "Open popups in a new tab"],
+                            ["window",  "Open popups in a new window"],
+                            ["resized", "Open resized popups in a new window"]
+                        ];
+                    }
                 });
 
             options.add(["tabnumbers", "tn"],
                 "Show small numbers at each tab to allow quicker selection",
                 "boolean", false,
                 {
-                    setter: function (value) {
+                    setter(value) {
                         // TODO: Change this stuff for muttator
                         if (value)
                             styles.addSheet(true, "tabnumbers", "chrome://*",
@@ -1160,11 +1166,11 @@ const Tabs = Module("tabs", {
                 "boolean", false,
                 {
                     scope: Option.SCOPE_LOCAL,
-                    setter: function (value) {
+                    setter(value) {
                         config.tabbrowser[value ? "pinTab" : "unpinTab"](tabs.getTab());
                         return value;
                     },
-                    getter: function () {
+                    getter() {
                         return tabs.getTab().pinned;
                     }
                 });

@@ -11,7 +11,7 @@ const VERSION = Services.appinfo.platformVersion;
 
 plugins.contexts = {};
 const Script = Class("Script", {
-    init: function (file) {
+    init(file) {
         let self = plugins.contexts[file.path];
         if (self) {
             if (self.onUnload)
@@ -19,7 +19,7 @@ const Script = Class("Script", {
             return self;
         }
         plugins.contexts[file.path] = this;
-        this.NAME = file.leafName.replace(/\..*/, "").replace(/-([a-z])/g, function (m, n1) n1.toUpperCase());
+        this.NAME = file.leafName.replace(/\..*/, "").replace(/-([a-z])/g, (m, n1) => n1.toUpperCase());
         this.PATH = file.path;
         this.toString = this.toString;
         this.__context__ = this;
@@ -43,7 +43,7 @@ const Script = Class("Script", {
  *          current directory. @default true
  */
 const File = Class("File", {
-    init: function (path, checkPWD) {
+    init(path, checkPWD) {
         if (arguments.length < 2)
             checkPWD = true;
 
@@ -69,7 +69,7 @@ const File = Class("File", {
     /**
      * Iterates over the objects in this directory.
      */
-    iterDirectory: function () {
+    *iterDirectory() {
         if (!this.isDirectory())
             throw Error("Not a directory");
         let entries = this.directoryEntries;
@@ -83,13 +83,13 @@ const File = Class("File", {
      *     entries.
      * @returns {nsIFile[]}
      */
-    readDirectory: function (sort) {
+    readDirectory(sort) {
         if (!this.isDirectory())
             throw Error("Not a directory");
 
         let array = Array.from(this.iterDirectory());
         if (sort)
-            array.sort(function (a, b) b.isDirectory() - a.isDirectory() ||  String.localeCompare(a.path, b.path));
+            array.sort((a, b) => b.isDirectory() - a.isDirectory() ||  String.localeCompare(a.path, b.path));
         return array;
     },
 
@@ -101,7 +101,7 @@ const File = Class("File", {
      *          @default options["fileencoding"]
      * @returns {string}
      */
-    read: function (encoding) {
+    read(encoding) {
         let ifstream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(Ci.nsIFileInputStream);
         let icstream = Cc["@mozilla.org/intl/converter-input-stream;1"].createInstance(Ci.nsIConverterInputStream);
 
@@ -145,7 +145,7 @@ const File = Class("File", {
      * @param {string} encoding The encoding to used to write the file.
      * @default options["fileencoding"]
      */
-    write: function (buf, mode, perms, encoding) {
+    write(buf, mode, perms, encoding) {
         let ofstream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
         function getStream(defaultChar) {
             let stream = Cc["@mozilla.org/intl/converter-output-stream;1"].createInstance(Ci.nsIConverterOutputStream);
@@ -242,19 +242,21 @@ const File = Class("File", {
      */
     MODE_EXCL: 0x80,
 
-    expandPathList: function (list) list.split(",").map(this.expandPath).join(","),
+    expandPathList(list) { return list.split(",").map(this.expandPath).join(","); },
 
-    expandPath: function (path, relative) {
+    expandPath(path, relative) {
 
         // expand any $ENV vars - this is naive but so is Vim and we like to be compatible
         // TODO: Vim does not expand variables set to an empty string (and documents it).
         // Kris reckons we shouldn't replicate this 'bug'. --djk
         // TODO: should we be doing this for all paths?
-        function expand(path) path.replace(
-            !liberator.has("Windows") ? /\$(\w+)\b|\${(\w+)}/g
-                                 : /\$(\w+)\b|\${(\w+)}|%(\w+)%/g,
-            function (m, n1, n2, n3) services.get("environment").get(n1 || n2 || n3) || m
-        )
+        function expand(path) {
+            return path.replace(
+                !liberator.has("Windows") ? /\$(\w+)\b|\${(\w+)}/g
+                                    : /\$(\w+)\b|\${(\w+)}|%(\w+)%/g,
+                (m, n1, n2, n3) => services.get("environment").get(n1 || n2 || n3) || m
+            );
+        }
         path = expand(path);
 
         // expand ~
@@ -277,17 +279,17 @@ const File = Class("File", {
         return path.replace(/\//g, IO.PATH_SEP);
     },
 
-    getPathsFromPathList: function (list) {
+    getPathsFromPathList(list) {
         if (!list)
             return [];
         // empty list item means the current directory
         return list.replace(/,$/, "").split(",")
-                   .map(function (dir) dir == "" ? io.getCurrentDirectory().path : dir);
+                   .map(dir => dir == "" ? io.getCurrentDirectory().path : dir);
     },
 
-    replacePathSep: function (path) path.replace("/", IO.PATH_SEP, "g"),
+    replacePathSep(path) { return path.replace("/", IO.PATH_SEP, "g"); },
 
-    joinPaths: function (head, tail) {
+    joinPaths(head, tail) {
         let path = this(head);
         try {
             path.appendRelativePath(this.expandPath(tail, true)); // FIXME: should only expand env vars and normalise path separators
@@ -300,12 +302,12 @@ const File = Class("File", {
             //    path.normalize();
         }
         catch (e) {
-            return { exists: function () false, __noSuchMethod__: function () { throw e; } };
+            return { exists() { return false; }, __noSuchMethod__() { throw e; } };
         }
         return path;
     },
 
-    isAbsolutePath: function (path) {
+    isAbsolutePath(path) {
         try {
             services.create("file").initWithPath(path);
             return true;
@@ -324,7 +326,7 @@ const File = Class("File", {
 const IO = Module("io", {
     requires: ["config", "services"],
 
-    init: function () {
+    init() {
         this._processDir = services.get("dirsvc").get("CurWorkD", Ci.nsIFile);
         this._cwd = this._processDir;
         this._oldcwd = null;
@@ -353,7 +355,7 @@ const IO = Module("io", {
             });
     },
 
-    destroy: function () {
+    destroy() {
         let {Downloads} = Cu.import("resource://gre/modules/Downloads.jsm", {});
         let downloadListener = this.downloadListener;
         Downloads.getList(Downloads.ALL)
@@ -406,7 +408,7 @@ const IO = Module("io", {
      *
      * @returns {nsIFile}
      */
-    getCurrentDirectory: function () {
+    getCurrentDirectory() {
         let dir = File(this._cwd.path);
 
         // NOTE: the directory could have been deleted underneath us so
@@ -423,7 +425,7 @@ const IO = Module("io", {
      * @param {string} newDir The new CWD. This may be a relative or
      *     absolute path and is expanded by {@link #expandPath}.
      */
-    setCurrentDirectory: function (newDir) {
+    setCurrentDirectory(newDir) {
         newDir = newDir || "~";
 
         if (newDir == "-") {
@@ -447,13 +449,13 @@ const IO = Module("io", {
      * Returns all directories named <b>name<b/> in 'runtimepath'.
      *
      * @param {string} name
-     * @returns {nsIFile[])
+     * @returns {nsIFile[]}
      */
-    getRuntimeDirectories: function (name) {
+    getRuntimeDirectories(name) {
         let dirs = File.getPathsFromPathList(options.runtimepath);
 
-        dirs = dirs.map(function (dir) File.joinPaths(dir, name))
-                   .filter(function (dir) dir.exists() && dir.isDirectory() && dir.isReadable());
+        dirs = dirs.map(dir => File.joinPaths(dir, name))
+                   .filter(dir => dir.exists() && dir.isDirectory() && dir.isReadable());
         return dirs;
     },
 
@@ -466,7 +468,7 @@ const IO = Module("io", {
      * @default $HOME.
      * @returns {nsIFile} The RC file or null if none is found.
      */
-    getRCFile: function (dir, always) {
+    getRCFile(dir, always) {
         dir = dir || "~";
 
         let rcFile1 = File.joinPaths(dir, "." + config.name.toLowerCase() + "rc");
@@ -490,7 +492,7 @@ const IO = Module("io", {
      *
      * @returns {File}
      */
-    createTempFile: function () {
+    createTempFile() {
         let file = services.get("dirsvc").get("TmpD", Ci.nsIFile);
 
         file.append(config.tempFile);
@@ -507,7 +509,7 @@ const IO = Module("io", {
      * @param {boolean} blocking Whether to wait until the process terminates.
      */
     blockingProcesses: [],
-    run: function (program, args, blocking) {
+    run(program, args, blocking) {
         args = args || [];
         blocking = !!blocking;
 
@@ -579,7 +581,7 @@ lookup:
      * @param {string[]} paths An array of relative paths to source.
      * @param {boolean} all Whether all found files should be sourced.
      */
-    sourceFromRuntimePath: function (paths, all) {
+    sourceFromRuntimePath(paths, all) {
         let dirs = File.getPathsFromPathList(options.runtimepath);
         let found = false;
 
@@ -612,7 +614,7 @@ lookup:
      * @param {string} filename The name of the file to source.
      * @param {boolean} silent Whether errors should be reported.
      */
-    source: function (filename, silent) {
+    source(filename, silent) {
         let wasSourcing = this.sourcing;
         try {
             var file = File(filename);
@@ -743,10 +745,10 @@ lookup:
      * @param {string} input Any input to be provided to the command on stdin.
      * @returns {string}
      */
-    system: function (command, input) {
+    system(command, input) {
         liberator.echomsg("Executing: " + command);
 
-        function escape(str) '"' + str.replace(/[\\"$]/g, "\\$&") + '"'
+        function escape(str) { return '"' + str.replace(/[\\"$]/g, "\\$&") + '"'; }
 
         return this.withTempFiles(function (stdin, stdout, cmd) {
             if (input)
@@ -791,7 +793,7 @@ lookup:
      * @returns {boolean} false if temp files couldn't be created,
      *     otherwise, the return value of <b>func</b>.
      */
-    withTempFiles: function (func, self) {
+    withTempFiles(func, self) {
         let args = util.map(util.range(0, func.length), this.createTempFile);
         if (!args.every(util.identity))
             return false;
@@ -800,7 +802,7 @@ lookup:
             return func.apply(self || this, args);
         }
         finally {
-            args.forEach(function (f) f.remove(false));
+            args.forEach(f => f.remove(false));
         }
     }
 }, {
@@ -828,7 +830,7 @@ lookup:
         return this.PATH_SEP = f.path.substr(f.parent.path.length, 1);
     }
 }, {
-    commands: function () {
+    commands() {
         commands.add(["cd", "chd[ir]"],
             "Change the current directory",
             function (args) {
@@ -868,7 +870,7 @@ lookup:
                 }
             }, {
                 argCount: "?",
-                completer: function (context) completion.directory(context, true),
+                completer(context) { return completion.directory(context, true); },
                 literal: 0
             });
 
@@ -922,7 +924,7 @@ lookup:
             }, {
                 argCount: "*", // FIXME: should be "?" but kludged for proper error message
                 bang: true,
-                completer: function (context) completion.file(context, true)
+                completer(context) { return completion.file(context, true); }
             });
 
         commands.add(["runt[ime]"],
@@ -950,7 +952,7 @@ lookup:
             }, {
                 literal: 0,
                 bang: true,
-                completer: function (context) completion.file(context, true)
+                completer(context) { return completion.file(context, true); }
             });
 
         commands.add(["!", "run"],
@@ -969,7 +971,7 @@ lookup:
                 // NOTE: Vim doesn't replace ! preceded by 2 or more backslashes and documents it - desirable?
                 // pass through a raw bang when escaped or substitute the last command
                 arg = arg.replace(/(\\)*!/g,
-                    function (m) /^\\(\\\\)*!$/.test(m) ? m.replace("\\!", "!") : m.replace("!", io._lastRunCommand)
+                    m => /^\\(\\\\)*!$/.test(m) ? m.replace("\\!", "!") : m.replace("!", io._lastRunCommand)
                 );
 
                 io._lastRunCommand = arg;
@@ -983,11 +985,11 @@ lookup:
             }, {
                 argCount: "?",
                 bang: true,
-                completer: function (context) completion.shellCommand(context),
+                completer(context) { return completion.shellCommand(context); },
                 literal: 0
             });
     },
-    completion: function () {
+    completion() {
         JavaScript.setCompleter([this.File, File.expandPath],
             [function (context, obj, args) {
                 context.quote[2] = "";
@@ -1005,7 +1007,7 @@ lookup:
 
         completion.directory = function directory(context, full) {
             this.file(context, full);
-            context.filters.push(function ({ item: f }) f.isDirectory());
+            context.filters.push(({ item: f }) => f.isDirectory());
         };
 
         completion.environment = function environment(context) {
@@ -1014,7 +1016,7 @@ lookup:
             lines.pop();
 
             context.title = ["Environment Variable", "Value"];
-            context.generate = function () lines.map(function (line) (line.match(/([^=]+)=(.+)/) || []).slice(1));
+            context.generate = function () { return lines.map(line => (line.match(/([^=]+)=(.+)/) || []).slice(1)); };
         };
 
         // TODO: support file:// and \ or / path separators on both platforms
@@ -1028,14 +1030,14 @@ lookup:
 
             context.title = [full ? "Path" : "Filename", "Type"];
             context.keys = {
-                text: !full ? "leafName" : function (f) dir + f.leafName,
-                description: function (f) f.isDirectory() ? "Directory" : "File",
-                isdir: function (f) f.exists() && f.isDirectory(),
-                icon: function (f) f.isDirectory() ? "resource://gre/res/html/folder.png"
-                                                             : "moz-icon://" + f.leafName
+                text: !full ? "leafName" : f => dir + f.leafName,
+                description(f) { return f.isDirectory() ? "Directory" : "File"; },
+                isdir(f) { return f.exists() && f.isDirectory(); },
+                icon(f) { return f.isDirectory() ? "resource://gre/res/html/folder.png" : "moz-icon://" + f.leafName; }
             };
-            context.compare = function (a, b)
-                        b.isdir - a.isdir || String.localeCompare(a.text, b.text);
+            context.compare = function (a, b) {
+                return b.isdir - a.isdir || String.localeCompare(a.text, b.text);
+            };
 
             context.match = function (str) {
                 let filter = this.filter;
@@ -1083,7 +1085,7 @@ lookup:
 
         completion.addUrlCompleter("f", "Local files", completion.file);
     },
-    options: function () {
+    options() {
         var shell, shellcmdflag;
         if (liberator.has("Windows")) {
             shell = "cmd.exe";
@@ -1099,22 +1101,22 @@ lookup:
         options.add(["fileencoding", "fenc"],
             "Sets the character encoding of read and written files",
             "string", "UTF-8", {
-                completer: function (context) completion.charset(context)
+                completer(context) { return completion.charset(context); }
             });
         options.add(["cdpath", "cd"],
             "List of directories searched when executing :cd",
             "stringlist", "," + (services.get("environment").get("CDPATH").replace(/[:;]/g, ",") || ","),
-            { setter: function (value) File.expandPathList(value) });
+            { setter(value) { return File.expandPathList(value); } });
 
         options.add(["runtimepath", "rtp"],
             "List of directories searched for runtime files",
             "stringlist", IO.runtimePath,
-            { setter: function (value) File.expandPathList(value) });
+            { setter(value) { return File.expandPathList(value); } });
 
         options.add(["shell", "sh"],
             "Shell to use for executing :! and :run commands",
             "string", shell,
-            { setter: function (value) File.expandPath(value) });
+            { setter(value) { return File.expandPath(value); } });
 
         options.add(["shellcmdflag", "shcf"],
             "Flag passed to shell when executing :! and :run commands",

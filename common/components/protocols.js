@@ -30,7 +30,7 @@ const systemPrincipal = channel.owner;
 channel.cancel(NS_BINDING_ABORTED);
 delete channel;
 
-function dataURL(type, data) "data:" + (type || "application/xml;encoding=UTF-8") + "," + encodeURIComponent(data)
+function dataURL(type, data) { return "data:" + (type || "application/xml;encoding=UTF-8") + "," + encodeURIComponent(data); }
 function makeChannel(url, orig) {
     if (typeof url == "function")
         url = dataURL.apply(null, url());
@@ -40,7 +40,7 @@ function makeChannel(url, orig) {
     channel.originalURI = orig;
     return channel;
 }
-function fakeChannel(orig) makeChannel("chrome://liberator/content/does/not/exist", orig)
+function fakeChannel(orig) { return makeChannel("chrome://liberator/content/does/not/exist", orig); }
 function redirect(to, orig) {
     //xxx: escape
     let html = '<html><head><meta http-equiv="Refresh" content="' + ("0;" + to).replace(/"/g, "&quot;") + '"/></head></html>';
@@ -54,7 +54,7 @@ ChromeData.prototype = {
     classDescription: "Data URIs with chrome privileges",
     QueryInterface:   XPCOMUtils.generateQI([Ci.nsIProtocolHandler]),
     _xpcom_factory: {
-        createInstance: function (outer, iid) {
+        createInstance(outer, iid) {
             if (!ChromeData.instance)
                 ChromeData.instance = new ChromeData();
             if (outer != null)
@@ -65,12 +65,12 @@ ChromeData.prototype = {
 
     scheme: "chrome-data",
     defaultPort: -1,
-    allowPort: function (port, scheme) false,
+    allowPort(port, scheme) { return false; },
     protocolFlags: nsIProtocolHandler.URI_NORELATIVE
          | nsIProtocolHandler.URI_NOAUTH
          | nsIProtocolHandler.URI_IS_UI_RESOURCE,
 
-    newURI: function (spec, charset, baseURI) {
+    newURI(spec, charset, baseURI) {
         var uri = Cc["@mozilla.org/network/standard-url;1"]
                     .createInstance(Ci.nsIStandardURL)
                     .QueryInterface(Ci.nsIURI);
@@ -78,7 +78,7 @@ ChromeData.prototype = {
         return uri;
     },
 
-    newChannel: function (uri) {
+    newChannel(uri) {
         try {
             if (uri.scheme == this.scheme)
                 return makeChannel(uri.spec.replace(/^.*?:\/*(.*)(?:#.*)?/, "data:$1"), uri);
@@ -102,7 +102,7 @@ Liberator.prototype = {
     classDescription: "Liberator utility protocol",
     QueryInterface:   XPCOMUtils.generateQI([Ci.nsIProtocolHandler]),
     _xpcom_factory: {
-        createInstance: function (outer, iid) {
+        createInstance(outer, iid) {
             if (!Liberator.instance)
                 Liberator.instance = new Liberator();
             if (outer != null)
@@ -111,22 +111,22 @@ Liberator.prototype = {
         }
     },
 
-    init: function (obj) {
-        for each (let prop in ["HELP_TAGS", "FILE_MAP", "OVERLAY_MAP"]) {
+    init(obj) {
+        for (const prop of ["HELP_TAGS", "FILE_MAP", "OVERLAY_MAP"]) {
             this[prop] = this[prop].constructor();
-            for (let [k, v] in Iterator(obj[prop] || {}))
+            for (let [k, v] of Object.entries(obj[prop] || {}))
                 this[prop][k] = v
         }
     },
 
     scheme: "liberator",
     defaultPort: -1,
-    allowPort: function (port, scheme) false,
+    allowPort(port, scheme) { return false; },
     protocolFlags: 0
          | nsIProtocolHandler.URI_IS_UI_RESOURCE
          | nsIProtocolHandler.URI_IS_LOCAL_RESOURCE,
 
-    newURI: function (spec, charset, baseURI) {
+    newURI(spec, charset, baseURI) {
         var uri = Cc["@mozilla.org/network/standard-url;1"]
                     .createInstance(Ci.nsIStandardURL)
                     .QueryInterface(Ci.nsIURI);
@@ -135,7 +135,7 @@ Liberator.prototype = {
         return uri;
     },
 
-    newChannel: function (uri) {
+    newChannel(uri) {
         try {
             let url;
             switch(uri.host) {
@@ -161,6 +161,6 @@ var components = [ChromeData, Liberator];
 if(XPCOMUtils.generateNSGetFactory)
     var NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
 else
-    function NSGetModule(compMgr, fileSpec) XPCOMUtils.generateModule(components)
+    function NSGetModule(compMgr, fileSpec) { return XPCOMUtils.generateModule(components); }
 
 // vim: set fdm=marker sw=4 ts=4 et:

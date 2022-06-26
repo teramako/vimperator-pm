@@ -106,7 +106,7 @@ var Config = Module("config", ConfigBase, {
 
     ignoreKeys: {},
 
-    get mainToolbar() document.getElementById("nav-bar"),
+    get mainToolbar() { return document.getElementById("nav-bar"); },
 
     scripts: [
         "browser.js",
@@ -139,14 +139,14 @@ var Config = Module("config", ConfigBase, {
         tabs:       [["TabsToolbar"],     "Tab bar"]
     },
 
-    get visualbellWindow() getBrowser().mPanelContainer,
+    get visualbellWindow() { return getBrowser().mPanelContainer; },
 
-    updateTitlebar: function () {
+    updateTitlebar() {
         config.tabbrowser.updateTitlebar();
     },
 }, {
 }, {
-    commands: function () {
+    commands() {
         commands.add(["winon[ly]"],
             "Close all other windows",
             function () {
@@ -185,7 +185,7 @@ var Config = Module("config", ConfigBase, {
             "Open the sidebar window",
             function (args) {
                 let arg = args.literalArg;
-                function compare(a, b) util.compareIgnoreCase(a, b) == 0
+                const compare = (a, b) => util.compareIgnoreCase(a, b) == 0;
 
                 // focus if the requested sidebar is already open
                 if (compare(document.getElementById("sidebar-title").value, arg)) {
@@ -206,7 +206,7 @@ var Config = Module("config", ConfigBase, {
             },
             {
                 argCount: "1",
-                completer: function (context) {
+                completer(context) {
                     context.ignoreCase = true;
                     return completion.sidebar(context);
                 },
@@ -230,7 +230,7 @@ var Config = Module("config", ConfigBase, {
                 options: [
                     [["-private", "-p"], commands.OPTION_NOARG],
                 ],
-                completer: function (context) completion.ex(context),
+                completer(context) { completion.ex(context); },
                 literal: 0
             });
 
@@ -254,13 +254,13 @@ var Config = Module("config", ConfigBase, {
                 options: [
                     [["-private", "-p"], commands.OPTION_NOARG],
                 ],
-                canonicalize: function (cmd) cmd.replace(/^(winop?|winopen?)\b/, 'open'),
-                completer: function (context) completion.url(context),
+                canonicalize(cmd) { return cmd.replace(/^(winop?|winopen?)\b/, 'open'); },
+                completer(context) { completion.url(context); },
                 literal: 0,
                 privateData: true
             });
     },
-    completion: function () {
+    completion() {
         completion.location = function location(context) {
             if (!services.get("autoCompleteSearch"))
                 return;
@@ -296,14 +296,14 @@ var Config = Module("config", ConfigBase, {
         completion.sidebar = function sidebar(context) {
             let menu = document.getElementById("viewSidebarMenu");
             context.title = ["Sidebar Panel"];
-            context.completions = Array.map(menu.childNodes, function (n) [n.label, ""]);
+            context.completions = Array.map(menu.childNodes, n => [n.label, ""]);
         };
 
         completion.addUrlCompleter("l",
             "Pale Moon location bar entries (bookmarks and history sorted in an intelligent way)",
             completion.location);
     },
-    modes: function () {
+    modes() {
         this.ignoreKeys = {
             "<Return>": modes.NORMAL | modes.INSERT,
             "<Space>": modes.NORMAL | modes.INSERT,
@@ -311,29 +311,29 @@ var Config = Module("config", ConfigBase, {
             "<Down>": modes.NORMAL | modes.INSERT
         };
     },
-    options: function () {
+    options() {
         options.add(["online"],
             "Set the 'work offline' option",
             "boolean", true,
             {
-                setter: function (value) {
+                setter(value) {
                     const ioService = services.get("io");
                     if (ioService.offline == value)
                         BrowserOffline.toggleOfflineStatus();
                     return value;
                 },
-                getter: function () !services.get("io").offline
+                getter() { return !services.get("io").offline; }
             });
 
         options.add(["newtaburl", "ntu"],
             "Set the default page for new tabs",
             "string", "about:newtab",
             {
-                setter: function (value) {
+                setter(value) {
                     options.setPref("browser.newtab.url", value);
                     return value;
                 },
-                getter: function () {
+                getter() {
                     return options.getPref("browser.newtab.url");
                 }
             });

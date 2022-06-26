@@ -7,18 +7,18 @@
 const IgnoreKeys = Module("ignoreKeys", {
     requires: ["config", "storage"],
 
-    init: function init() {
+    init() {
         this._ignoredKeys = storage.newMap("ignored-keys", { store: true, privateData: true });
     },
 
-    add: function add(filter, exceptions) {
+    add(filter, exceptions) {
         if (!exceptions)
             exceptions = [];
         // TODO: Add a regular expression cache somewhere?
         this._ignoredKeys.set(filter, exceptions);
     },
 
-    get: function get(filter) {
+    get(filter) {
         let filtered = [];
         for (let [page, exceptions] in this._ignoredKeys) {
             if (!filter || page.indexOf(filter) >= 0)
@@ -28,7 +28,7 @@ const IgnoreKeys = Module("ignoreKeys", {
         return filtered;
     },
 
-    hasIgnoredKeys: function isKeyIgnored(url) {
+    hasIgnoredKeys(url) {
         for (let [page, exceptions] in this._ignoredKeys) {
             let re = RegExp(page);
             if (re.test(url))
@@ -37,7 +37,7 @@ const IgnoreKeys = Module("ignoreKeys", {
         return null;
     },
 
-    isKeyIgnored: function isKeyIgnored(url, key) {
+    isKeyIgnored(url, key) {
         // Don't cripple Vimperator ;) Later this will be part of a new "unignorekeys" option
         if (key == ":")
             return false;
@@ -50,7 +50,7 @@ const IgnoreKeys = Module("ignoreKeys", {
         return false;
     },
 
-    remove: function remove(filter) {
+    remove(filter) {
         if (!filter) {
             liberator.echoerr("Invalid filter");
             return;
@@ -62,13 +62,13 @@ const IgnoreKeys = Module("ignoreKeys", {
         }
     },
 
-    clear: function clear() {
+    clear() {
         this._ignoredKeys.clear();
     }
 
 }, {
 }, {
-    mappings: function () {
+    mappings() {
         mappings.add([modes.NORMAL], ["I"],
             "Open an :ignorekeys prompt for the current domain or URL",
             function (count) {
@@ -77,7 +77,7 @@ const IgnoreKeys = Module("ignoreKeys", {
             { count: false });
     },
 
-    commands: function () {
+    commands() {
         commands.add(["ignore[keys]"],
             "Ignore all (or most) " + config.name + " keys for certain URLs",
             function (args) {
@@ -92,7 +92,7 @@ const IgnoreKeys = Module("ignoreKeys", {
                             options: [
                                 [["-except", "-e"],  commands.OPTION_LIST, null, null],
                             ],
-                            completer: function (context, args) {
+                            completer(context, args) {
                                 let completions = [];
                                 if (args.completeArg == 0) {
                                     if (buffer.URL)
@@ -133,13 +133,13 @@ const IgnoreKeys = Module("ignoreKeys", {
                         {
                             argCount: 1,
                             literal: 0,
-                            completer: function (context, args) completion.ignorekeys(context, args.literalArg || ""),
+                            completer(context, args) { completion.ignorekeys(context, args.literalArg || ""); },
                         })
                 ]
             });
     },
 
-    completion: function () {
+    completion() {
         completion.ignorekeys = function (context) {
             context.title = ["URL filter", "Ignored keys"];
             context.anchored = false; // match the filter anywhere

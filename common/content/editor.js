@@ -13,14 +13,14 @@
 const Editor = Module("editor", {
     requires: ["config", "abbreviations"],
 
-    init: function () {
+    init() {
         // store our last search with f, F, t or T
         this._lastFindChar = null;
         this._lastFindCharFunc = null;
         this._visualMode = "";
     },
 
-    line: function () {
+    line() {
         let line = 1;
         let text = Editor.getEditor().value;
         for (let i = 0; i < Editor.getEditor().selectionStart; i++)
@@ -29,7 +29,7 @@ const Editor = Module("editor", {
         return line;
     },
 
-    col: function () {
+    col() {
         let col = 1;
         let text = Editor.getEditor().value;
         for (let i = 0; i < Editor.getEditor().selectionStart; i++) {
@@ -40,7 +40,7 @@ const Editor = Module("editor", {
         return col;
     },
 
-    unselectText: function () {
+    unselectText() {
         let e = Editor.getEditor();
         if (e instanceof Window) {
             e.getSelection().collapseToStart();
@@ -54,7 +54,7 @@ const Editor = Module("editor", {
         }
     },
 
-    selectedText: function () {
+    selectedText() {
         let e = Editor.getEditor();
         if (e instanceof Window)
             return e.getSelection().toString();
@@ -63,7 +63,7 @@ const Editor = Module("editor", {
     },
 
 
-    pasteClipboard: function () {
+    pasteClipboard() {
 
             if (!liberator.has("Unix")) {
                 this.executeCommand("cmd_paste");
@@ -102,7 +102,7 @@ const Editor = Module("editor", {
     },
 
     // count is optional, defaults to 1
-    executeCommand: function (cmd, count) {
+    executeCommand(cmd, count) {
         let controller = Editor.getController(cmd);
         if (!controller || !controller.supportsCommand(cmd) || !controller.isCommandEnabled(cmd)) {
             liberator.beep();
@@ -133,7 +133,7 @@ const Editor = Module("editor", {
 
     // cmd = y, d, c
     // motion = b, 0, gg, G, etc.
-    executeCommandWithMotion: function (cmd, motion, count) {
+    executeCommandWithMotion(cmd, motion, count) {
         if (typeof count != "number" || count < 1)
             count = 1;
 
@@ -216,7 +216,7 @@ const Editor = Module("editor", {
     // Simple setSelectionRange() would be better, but we want to maintain the correct
     // order of selectionStart/End (a Gecko bug always makes selectionStart <= selectionEnd)
     // Use only for small movements!
-    moveToPosition: function (pos, forward, select) {
+    moveToPosition(pos, forward, select) {
         if (!select) {
             Editor.getEditor().setSelectionRange(pos, pos);
             return;
@@ -243,7 +243,7 @@ const Editor = Module("editor", {
     },
 
     // returns the position of char
-    findCharForward: function (ch, count) {
+    findCharForward(ch, count) {
         if (!Editor.getEditor())
             return -1;
 
@@ -268,7 +268,7 @@ const Editor = Module("editor", {
     },
 
     // returns the position of char
-    findCharBackward: function (ch, count) {
+    findCharBackward(ch, count) {
         if (!Editor.getEditor())
             return -1;
 
@@ -292,7 +292,7 @@ const Editor = Module("editor", {
         return -1;
     },
 
-    editFileExternally: function (path) {
+    editFileExternally(path) {
         // TODO: save return value in v:shell_error
         let args = commands.parseArgs(options.editor, [], [], "*", true);
 
@@ -303,7 +303,7 @@ const Editor = Module("editor", {
     },
 
     // TODO: clean up with 2 functions for textboxes and currentEditor?
-    editFieldExternally: function (forceEditing, field) {
+    editFieldExternally(forceEditing, field) {
         if (!options.editor)
             return;
 
@@ -452,7 +452,7 @@ const Editor = Module("editor", {
      * @param {string} filter The mode filter.
      * @see #addAbbreviation
      */
-    expandAbbreviation: function (mode) {
+    expandAbbreviation(mode) {
         let textbox   = Editor.getEditor();
         if (!textbox)
             return false;
@@ -499,17 +499,17 @@ const Editor = Module("editor", {
         return true;
     },
 
-    getVisualMode: function() {
+    getVisualMode() {
         return this._visualMode;
     },
 
-    setVisualMode: function(value) {
+    setVisualMode(value) {
         this._visualMode = value;
         modes.show();
     }
 
 }, {
-    getEditor: function () {
+    getEditor() {
         let e = liberator.focus;
         if (!e || e.isContentEditable) {
             e = document.commandDispatcher.focusedWindow;
@@ -523,7 +523,7 @@ const Editor = Module("editor", {
         return e;
     },
 
-    getController: function (cmd) {
+    getController(cmd) {
         let ed = Editor.getEditor();
         if (!ed || !ed.controllers)
             return null;
@@ -531,7 +531,7 @@ const Editor = Module("editor", {
         return ed.controllers.getControllerForCommand(cmd || "cmd_beginLine");
     },
 
-    windowIsEditable: function (win) {
+    windowIsEditable(win) {
         if (!win)
             win = document.commandDispatcher.focusedWindow;
         if (!(win instanceof Window))
@@ -546,7 +546,7 @@ const Editor = Module("editor", {
                     (services.get("focus").getFocusedElementForWindow(win, true, {})||{}).isContentEditable);
     }
 }, {
-    mappings: function () {
+    mappings() {
         var myModes = [modes.INSERT, modes.COMMAND_LINE];
 
         // add mappings for commands like h,j,k,l,etc. in CARET, VISUAL and TEXTAREA mode
@@ -599,8 +599,7 @@ const Editor = Module("editor", {
         function addBeginInsertModeMap(keys, commands) {
             mappings.add([modes.TEXTAREA], keys, "",
                 function (count) {
-                    commands.forEach(function (cmd)
-                        editor.executeCommand(cmd, 1));
+                    commands.forEach(cmd => editor.executeCommand(cmd, 1));
                     modes.set(modes.INSERT, modes.TEXTAREA);
                 });
         }
@@ -903,7 +902,7 @@ const Editor = Module("editor", {
             { count: true });
     },
 
-    options: function () {
+    options() {
         options.add(["editor"],
             "Set the external text editor",
             "string", "gvim -f");

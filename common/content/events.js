@@ -14,7 +14,7 @@
 const Events = Module("events", {
     requires: ["autocommands", "config"],
 
-    init: function () {
+    init() {
         const self = this;
 
         this._fullscreen = window.fullScreen;
@@ -48,8 +48,8 @@ const Events = Module("events", {
 
         for (let [k, v] in Iterator(KeyEvent))
             if (/^DOM_VK_(?![A-Z0-9]$)/.test(k)) {
-                k = k.substr(7).toLowerCase();
-                let names = [k.replace(/(^|_)(.)/g, function (m, n1, n2) n2.toUpperCase())
+                k = k.substring(7).toLowerCase();
+                let names = [k.replace(/(^|_)(.)/g, (m, n1, n2) => n2.toUpperCase())
                               .replace(/^NUMPAD/, "k")];
                 if (k in this._keyTable)
                     names = this._keyTable[k];
@@ -79,10 +79,10 @@ const Events = Module("events", {
                 let dirs = io.getRuntimeDirectories("macros");
 
                 if (dirs.length > 0) {
-                    for (let dir of dirs) {
+                    for (const dir of dirs) {
                          liberator.log("Sourcing macros directory: " + dir.path);
 
-                        for (let file in dir.iterDirectory()) {
+                        for (const file of dir.iterDirectory()) {
                             if (file.exists() && !file.isDirectory() && file.isReadable() &&
                                 /^[\w_-]+(\.vimp)?$/i.test(file.leafName)) {
                                 let name = file.leafName.replace(/\.vimp$/i, "");
@@ -132,7 +132,7 @@ const Events = Module("events", {
 
     },
 
-    destroy: function () {
+    destroy() {
         liberator.log("Removing all event listeners");
         for (let args in values(this.sessionListeners))
             args[0].removeEventListener.apply(args[0], args.slice(1));
@@ -148,7 +148,7 @@ const Events = Module("events", {
      * @param {boolean} capture When true, listen during the capture
      *      phase, otherwise during the bubbling phase.
      */
-    addSessionListener: function (target, event, callback, capture) {
+    addSessionListener(target, event, callback, capture) {
         let args = Array.slice(arguments, 0);
         target.addEventListener.apply(target, args.slice(1));
         this.sessionListeners.push(args);
@@ -165,7 +165,7 @@ const Events = Module("events", {
      *
      * @param {string} macro The name for the macro.
      */
-    startRecording: function (macro) {
+    startRecording(macro) {
         // TODO: ignore this like Vim?
         liberator.assert(/[a-zA-Z0-9]/.test(macro), "Invalid register name: '" + macro + "'");
 
@@ -188,7 +188,7 @@ const Events = Module("events", {
      * @param {string} The name of the macro to replay.
      * @returns {boolean}
      */
-    playMacro: function (macro) {
+    playMacro(macro) {
         let res = false;
         if (!/[a-zA-Z0-9@]/.test(macro) && macro.length == 1) {
             liberator.echoerr("Invalid macro name: " + macro);
@@ -232,7 +232,7 @@ const Events = Module("events", {
      * @param {string} filter A regular expression filter string. A null
      *     filter selects all macros.
      */
-    getMacros: function (filter) {
+    getMacros(filter) {
         if (!filter)
             return this._macros;
 
@@ -247,7 +247,7 @@ const Events = Module("events", {
      * @param {string} filter The list of macros to delete.
      *
      */
-    deleteMacros: function (filter) {
+    deleteMacros(filter) {
         let re = RegExp("[" + filter.replace(/\s+/g, "") + "]");
 
         for (let [item, ] in this._macros) {
@@ -265,11 +265,11 @@ const Events = Module("events", {
      *     queue. If you want "<" to be taken literally, prepend it with a
      *     "\\".
      * @param {boolean} noremap Allow recursive mappings.
-     * @param {boolean} silent Whether the command should be echoed to the
+     * @param {boolean} quiet Whether the command should be echoed to the
      *     command line.
      * @returns {boolean}
      */
-    feedkeys: function (keys, noremap, quiet) {
+    feedkeys(keys, noremap, quiet) {
         let doc = window.document;
         let view = window.document.defaultView;
 
@@ -337,7 +337,7 @@ const Events = Module("events", {
      * @param {Type} type  The type of event (keypress, click, etc.)
      * @param {Object} opts  The pseudo-event.
      */
-    create: function (doc, type, opts) {
+    create(doc, type, opts) {
         var DEFAULTS = {
             Key: {
                 type: type,
@@ -386,7 +386,7 @@ const Events = Module("events", {
      * @param {string} keys Messy form.
      * @returns {string} Canonical form.
      */
-    canonicalKeys: function (keys) {
+    canonicalKeys(keys) {
         return events.fromString(keys).map(events.closure.toString).join("");
     },
 
@@ -407,7 +407,7 @@ const Events = Module("events", {
      * @param {string} keys The string to parse.
      * @returns {Array[Object]}
      */
-    fromString: function (input) {
+    fromString(input) {
         let out = [];
 
         let re = RegExp("<.*?>?>|[^<]|<(?!.*>)", "g");
@@ -482,7 +482,7 @@ const Events = Module("events", {
      *
      * @see http://unixpapa.com/js/key.html
      */
-    toString: function (event) {
+    toString(event) {
         if (!event)
             return "[instance events]";
 
@@ -613,7 +613,7 @@ const Events = Module("events", {
      * @param {string} key The key code to test.
      * @returns {boolean}
      */
-    isAcceptKey: function (key) key == "<Return>" || key == "<C-j>" || key == "<C-m>",
+    isAcceptKey(key) { return key == "<Return>" || key == "<C-j>" || key == "<C-m>"; },
 
     /**
      * Whether <b>key</b> is a key code defined to reject/cancel input on
@@ -622,7 +622,7 @@ const Events = Module("events", {
      * @param {string} key The key code to test.
      * @returns {boolean}
      */
-    isCancelKey: function (key) key == "<Esc>" || key == "<C-[>" || key == "<C-c>",
+    isCancelKey(key) { return key == "<Esc>" || key == "<C-[>" || key == "<C-c>"; },
 
     /**
      * Whether <b>key</b> is a key code defined to go back to NORMAL mode
@@ -630,7 +630,7 @@ const Events = Module("events", {
      * @param {string} key The key code to test.
      * @returns {boolean}
      */
-    isEscapeKey: function (key) key == "<Esc>" || key == "<C-[>",
+    isEscapeKey(key) { return key == "<Esc>" || key == "<C-[>"; },
 
     /**
      * Waits for the current buffer to successfully finish loading. Returns
@@ -638,7 +638,7 @@ const Events = Module("events", {
      *
      * @returns {boolean}
      */
-    waitForPageLoad: function () {
+    waitForPageLoad() {
         liberator.threadYield(true); // clear queue
 
         if (buffer.loaded == 1)
@@ -677,12 +677,12 @@ const Events = Module("events", {
     // argument "event" is deliberately not used, as i don't seem to have
     // access to the real focus target
     // Huh? --djk
-    onFocusChange: function (event) {
+    onFocusChange(event) {
         // command line has it's own focus change handler
         if (liberator.mode == modes.COMMAND_LINE)
             return;
 
-        function hasHTMLDocument(win) win && win.document && win.document instanceof HTMLDocument
+        function hasHTMLDocument(win) { return win && win.document && win.document instanceof HTMLDocument; }
 
         let win  = window.document.commandDispatcher.focusedWindow;
         let elem = window.document.commandDispatcher.focusedElement;
@@ -746,7 +746,7 @@ const Events = Module("events", {
         }
     },
 
-    onSelectionChange: function (event) {
+    onSelectionChange(event) {
         let couldCopy = false;
         let controller = document.commandDispatcher.getControllerForCommand("cmd_copy");
         if (controller && controller.isCommandEnabled("cmd_copy"))
@@ -773,7 +773,7 @@ const Events = Module("events", {
     /**
      *  The global escape key handler. This is called in ALL modes.
      */
-    onEscape: function () {
+    onEscape() {
         if (modes.passNextKey) // We allow <Esc> in passAllKeys
             return;
 
@@ -856,10 +856,14 @@ const Events = Module("events", {
         modes.show();
     },
 
-    // this keypress handler gets always called first, even if e.g.
-    // the commandline has focus
-    // TODO: ...help me...please...
-    onKeyPress: function (event) {
+    /**
+     * this keypress handler gets always called first, even if e.g.
+     * the commandline has focus
+     * TODO: ...help me...please...
+     * @param {KeyboardEvent} event 
+     * @returns 
+     */
+    onKeyPress(event) {
         function killEvent() {
             event.preventDefault();
             event.stopPropagation();
@@ -1093,7 +1097,10 @@ const Events = Module("events", {
         }
     },
 
-    onKeyUpOrDown: function (event) {
+    /**
+     * @param {KeyboardEvent} event 
+     */
+    onKeyUpOrDown(event) {
         // Always let the event be handled by the webpage/Firefox for certain modes
         if (modes.isMenuShown)
             return;
@@ -1149,13 +1156,13 @@ const Events = Module("events", {
         // liberator.echo ("key: " + key + "\nkeycode: " + event.keyCode + "\nchar: " + event.charCode + "\ntype: " + event.type + "\nwhich: " + event.which);
     },
 
-    onPopupShown: function (event) {
+    onPopupShown(event) {
         if (event.originalTarget.localName == "tooltip" || event.originalTarget.id == "liberator-visualbell")
             return;
         modes.isMenuShown = true;
     },
 
-    onPopupHidden: function (event) {
+    onPopupHidden(event) {
         if (event.originalTarget.localName == "tooltip" || event.originalTarget.id == "liberator-visualbell")
             return;
         // gContextMenu is set to NULL, when a context menu is closed
@@ -1163,17 +1170,17 @@ const Events = Module("events", {
             modes.isMenuShown = false;
     },
 
-    onDOMMenuBarActive: function () {
+    onDOMMenuBarActive() {
         this._activeMenubar = true;
         modes.isMenuShown = true;
     },
 
-    onDOMMenuBarInactive: function () {
+    onDOMMenuBarInactive() {
         this._activeMenubar = false;
         modes.isMenuShown = false;
     },
 
-    onResize: function (event) {
+    onResize(event) {
         if (window.fullScreen != this._fullscreen) {
             this._fullscreen = window.fullScreen;
             liberator.triggerObserver("fullscreen", this._fullscreen);
@@ -1183,7 +1190,7 @@ const Events = Module("events", {
         statusline.updateField("zoomlevel");
     }
 }, {
-    isInputElemFocused: function () {
+    isInputElemFocused() {
         let elem = liberator.focus;
         if (!elem) {
             return false;
@@ -1195,7 +1202,7 @@ const Events = Module("events", {
                  (elem && elem.contentEditable === "true"));
     }
 }, {
-    commands: function () {
+    commands() {
         commands.add(["delmac[ros]"],
             "Delete macros",
             function (args) {
@@ -1209,24 +1216,24 @@ const Events = Module("events", {
                     liberator.echoerr("Argument required");
             }, {
                 bang: true,
-                completer: function (context) completion.macro(context)
+                completer(context) { return completion.macro(context); }
             });
 
         commands.add(["mac[ros]"],
             "List all macros",
             function (args) { completion.listCompleter("macro", args[0]); }, {
                 argCount: "?",
-                completer: function (context) completion.macro(context)
+                completer(context) { return completion.macro(context); }
             });
 
         commands.add(["pl[ay]"],
             "Replay a recorded macro",
             function (args) { events.playMacro(args[0]); }, {
                 argCount: "1",
-                completer: function (context) completion.macro(context)
+                completer(context) { return completion.macro(context); }
             });
     },
-    mappings: function () {
+    mappings() {
         mappings.add(modes.all,
             ["<Esc>", "<C-[>"], "Focus content",
             function () { events.onEscape(); });

@@ -19,7 +19,7 @@ const Point = Struct("x", "y");
 const Buffer = Module("buffer", {
     requires: ["config"],
 
-    init: function () {
+    init() {
         this.pageInfo = {};
 
         this.addPageInfoSection("f", "Feeds", function (verbose) {
@@ -63,9 +63,9 @@ const Buffer = Module("buffer", {
             }
 
             let nFeed = 0;
-            for (let link in util.evaluateXPath(["link[@href and (@rel='feed' or (@rel='alternate' and @type))]"], doc)) {
-                let rel = link.rel.toLowerCase();
-                let feed = { title: link.title, href: link.href, type: link.type || "" };
+            for (const link of util.evaluateXPath(["link[@href and (@rel='feed' or (@rel='alternate' and @type))]"], doc)) {
+                const rel = link.rel.toLowerCase();
+                const feed = { title: link.title, href: link.href, type: link.type || "" };
                 if (isValidFeed(feed, doc.nodePrincipal, rel == "feed")) {
                     nFeed++;
                     let type = feedTypes[feed.type] || "RSS";
@@ -137,15 +137,15 @@ const Buffer = Module("buffer", {
             // get meta tag data, sort and put into pageMeta[]
             let metaNodes = config.browser.contentDocument.getElementsByTagName("meta");
 
-            return Array.map(metaNodes, function (node) [(node.name || node.httpEquiv), template.highlightURL(node.content)])
-                        .sort(function (a, b) util.compareIgnoreCase(a[0], b[0]));
+            return Array.map(metaNodes, node => [(node.name || node.httpEquiv), template.highlightURL(node.content)])
+                        .sort((a, b) => util.compareIgnoreCase(a[0], b[0]));
         });
     },
 
-    destroy: function () {
+    destroy() {
     },
 
-    _triggerLoadAutocmd: function _triggerLoadAutocmd(name, doc) {
+    _triggerLoadAutocmd(name, doc) {
         let args = {
             url:   doc.location.href,
             title: doc.title
@@ -160,12 +160,12 @@ const Buffer = Module("buffer", {
     },
 
     // called when the active document is scrolled
-    _updateBufferPosition: function _updateBufferPosition() {
+    _updateBufferPosition() {
         statusline.updateField("position");
         // modes.show();
     },
 
-    onDOMContentLoaded: function onDOMContentLoaded(event) {
+    onDOMContentLoaded(event) {
         let doc = event.originalTarget;
         if (doc instanceof HTMLDocument && !doc.defaultView.frameElement)
             this._triggerLoadAutocmd("DOMLoad", doc);
@@ -174,7 +174,7 @@ const Buffer = Module("buffer", {
     // TODO: see what can be moved to onDOMContentLoaded()
     // event listener which is is called on each page load, even if the
     // page is loaded in a background tab
-    onPageLoad: function onPageLoad(event) {
+    onPageLoad(event) {
         if (event.originalTarget instanceof HTMLDocument) {
             let doc = event.originalTarget;
             // document is part of a frameset
@@ -215,8 +215,8 @@ const Buffer = Module("buffer", {
         QueryInterface: XPCOMUtils.generateQI([Ci.nsISupportsWeakReference, Ci.nsIWebProgressListener, Ci.nsIMsgStatusFeedback, Ci.nsIActivityMgrListener, Ci.nsIActivityListener]),
 
         // XXX: function may later be needed to detect a canceled synchronous openURL()
-        onStateChange: function onStateChange(webProgress, request, flags, status) {
-            onStateChange.superapply(this, arguments);
+        onStateChange(webProgress, request, flags, status) {
+            this.onStateChange.superapply(this, arguments);
             // STATE_IS_DOCUMENT | STATE_IS_WINDOW is important, because we also
             // receive statechange events for loading images and other parts of the web page
             if (flags & (Ci.nsIWebProgressListener.STATE_IS_DOCUMENT | Ci.nsIWebProgressListener.STATE_IS_WINDOW)) {
@@ -242,19 +242,19 @@ const Buffer = Module("buffer", {
             }
         },
         // for notifying the user about secure web pages
-        onSecurityChange: function onSecurityChange(webProgress, request, state) {
-            onSecurityChange.superapply(this, arguments);
+        onSecurityChange(webProgress, request, state) {
+            this.onSecurityChange.superapply(this, arguments);
             statusline.updateField("ssl", state);
         },
-        onStatusChange: function onStatusChange(webProgress, request, status, message) {
-            onStatusChange.superapply(this, arguments);
+        onStatusChange(webProgress, request, status, message) {
+            this.onStatusChange.superapply(this, arguments);
         },
-        onProgressChange: function onProgressChange(webProgress, request, curSelfProgress, maxSelfProgress, curTotalProgress, maxTotalProgress) {
-            onProgressChange.superapply(this, arguments);
+        onProgressChange(webProgress, request, curSelfProgress, maxSelfProgress, curTotalProgress, maxTotalProgress) {
+            this.onProgressChange.superapply(this, arguments);
         },
         // happens when the users switches tabs
-        onLocationChange: function onLocationChange() {
-            onLocationChange.superapply(this, arguments);
+        onLocationChange() {
+            this.onLocationChange.superapply(this, arguments);
             statusline.updateField("location");
             statusline.updateField("bookmark");
             statusline.updateField("history");
@@ -278,14 +278,14 @@ const Buffer = Module("buffer", {
             setTimeout(function () { statusline.updateField("position"); }, 250);
         },
         // called at the very end of a page load
-        asyncUpdateUI: function asyncUpdateUI() {
-            asyncUpdateUI.superapply(this, arguments);
+        asyncUpdateUI() {
+            this.asyncUpdateUI.superapply(this, arguments);
         },
-        setOverLink: function setOverLink(link, b) {
+        setOverLink(link, b) {
             let ssli = options.showstatuslinks;
 
             if (ssli == 3) {
-                setOverLink.superapply(this, arguments);
+                this.setOverLink.superapply(this, arguments);
                 return;
             }
 
@@ -317,14 +317,14 @@ const Buffer = Module("buffer", {
         let stylesheets = window.getAllStyleSheets(config.browser.contentWindow);
 
         return stylesheets.filter(
-            function (stylesheet) /^(screen|all|)$/i.test(stylesheet.media.mediaText) && !/^\s*$/.test(stylesheet.title)
+            stylesheet => /^(screen|all|)$/i.test(stylesheet.media.mediaText) && !/^\s*$/.test(stylesheet.title)
         );
     },
 
     /**
      * @property {Array[Window]} All frames in the current buffer.
      */
-    getAllFrames: function(win) {
+    getAllFrames(win) {
         let frames = [];
         (function rec(frame) {
             if (frame.document.body instanceof HTMLBodyElement)
@@ -375,13 +375,13 @@ const Buffer = Module("buffer", {
      * @property {Node} The last focused input field in the buffer. Used
      *     by the "gi" key binding.
      */
-    get lastInputField() config.browser.contentDocument.lastInputField || null,
+    get lastInputField() { return config.browser.contentDocument.lastInputField || null; },
     set lastInputField(value) { config.browser.contentDocument.lastInputField = value; },
 
     /**
      * @property {string} The current top-level document's URL.
      */
-    get URL() window.content ? window.content.location.href : config.browser.currentURI.spec,
+    get URL() { return window.content ? window.content.location.href : config.browser.currentURI.spec; },
 
     /**
      * @property {string} The current top-level document's URL, sans any
@@ -406,13 +406,13 @@ const Buffer = Module("buffer", {
     /**
      * @property {number} The buffer's height in pixels.
      */
-    get pageHeight() window.content ? window.content.innerHeight : config.browser.contentWindow.innerHeight,
+    get pageHeight() { return window.content ? window.content.innerHeight : config.browser.contentWindow.innerHeight; },
 
     /**
      * @property {number} The current browser's text zoom level, as a
      *     percentage with 100 as 'normal'. Only affects text size.
      */
-    get textZoom() config.browser.markupDocumentViewer.textZoom * 100,
+    get textZoom() { config.browser.markupDocumentViewer.textZoom * 100; },
     set textZoom(value) { Buffer.setZoom(value, false); },
 
     /**
@@ -432,13 +432,13 @@ const Buffer = Module("buffer", {
      *     percentage with 100 as 'normal'. Affects text size, as well as
      *     image size and block size.
      */
-    get fullZoom() config.browser.markupDocumentViewer.fullZoom * 100,
+    get fullZoom() { return config.browser.markupDocumentViewer.fullZoom * 100; },
     set fullZoom(value) { Buffer.setZoom(value, true); },
 
     /**
      * @property {string} The current document's title.
      */
-    get title() config.browser.contentTitle,
+    get title() { return config.browser.contentTitle; },
 
     /**
      * @property {number} The buffer's horizontal scroll percentile.
@@ -471,7 +471,7 @@ const Buffer = Module("buffer", {
      * @param {function} func The function to generate this
      *     section's output.
      */
-    addPageInfoSection: function addPageInfoSection(option, title, func) {
+    addPageInfoSection(option, title, func) {
         this.pageInfo[option] = [func, title];
     },
 
@@ -486,7 +486,7 @@ const Buffer = Module("buffer", {
      */
     // FIXME: getSelection() doesn't always preserve line endings, see:
     // https://www.mozdev.org/bugs/show_bug.cgi?id=19303
-    getCurrentWord: function () {
+    getCurrentWord() {
         function _getCurrentWord (win) {
             let elem = win.frameElement;
             if (elem && elem.getClientRects().length === 0)
@@ -523,7 +523,7 @@ const Buffer = Module("buffer", {
      *
      * @param {Node} elem The element to focus.
      */
-    focusElement: function (elem) {
+    focusElement(elem) {
         if (elem instanceof HTMLFrameElement || elem instanceof HTMLIFrameElement)
             Buffer.focusedWindow = elem.contentWindow;
         else if (elem instanceof HTMLInputElement && elem.type == "file") {
@@ -556,9 +556,9 @@ const Buffer = Module("buffer", {
      *     "pattern", and finds the last link matching that
      *     RegExp.
      */
-    followDocumentRelationship: function (rel, ...synonyms) {
+    followDocumentRelationship(rel, ...synonyms) {
         let regexes = options.get(rel + "pattern").values
-                             .map(function (re) RegExp(re, "i"));
+                             .map(re => RegExp(re, "i"));
         synonyms.unshift(rel);
 
         function followFrame(frame) {
@@ -588,7 +588,7 @@ const Buffer = Module("buffer", {
                 for (let i in util.range(res.snapshotLength, 0, -1)) {
                     let elem = res.snapshotItem(i);
                     if (regex.test(elem.textContent) || regex.test(elem.title) ||
-                            Array.some(elem.childNodes, function (child) regex.test(child.alt))) {
+                            Array.some(elem.childNodes, child => regex.test(child.alt))) {
                         buffer.followLink(elem, liberator.CURRENT_TAB);
                         return true;
                     }
@@ -618,7 +618,7 @@ const Buffer = Module("buffer", {
      * @param {number} where Where to open the link. See
      *     {@link liberator.open}.
      */
-    followLink: function (elem, where) {
+    followLink(elem, where) {
         let doc = elem.ownerDocument;
         let view = doc.defaultView;
         let offsetX = 1;
@@ -672,20 +672,22 @@ const Buffer = Module("buffer", {
      * @property {nsISelectionController} The current document's selection
      *     controller.
      */
-    get selectionController() Buffer.focusedWindow
+    get selectionController() {
+        return Buffer.focusedWindow
             .QueryInterface(Ci.nsIInterfaceRequestor)
             .getInterface(Ci.nsIWebNavigation)
             .QueryInterface(Ci.nsIDocShell)
             .QueryInterface(Ci.nsIInterfaceRequestor)
             .getInterface(Ci.nsISelectionDisplay)
-            .QueryInterface(Ci.nsISelectionController),
+            .QueryInterface(Ci.nsISelectionController);
+    },
 
     /**
      * Opens the appropriate context menu for <b>elem</b>.
      *
      * @param {Node} elem The context element.
      */
-    openContextMenu: function (elem) {
+    openContextMenu(elem) {
         let menu = document.getElementById("contentAreaContextMenu");
         menu.showPopup(elem, -1, -1, "context", "bottomleft", "topleft");
     },
@@ -697,7 +699,7 @@ const Buffer = Module("buffer", {
      * @param {boolean} skipPrompt Whether to open the "Save Link As..."
      *     dialog.
      */
-    saveLink: function (elem, skipPrompt) {
+    saveLink(elem, skipPrompt) {
         let doc  = elem.ownerDocument;
         let url  = window.makeURLAbsolute(elem.baseURI, elem.href ? elem.href : elem.src);
         let text = elem.textContent;
@@ -716,7 +718,7 @@ const Buffer = Module("buffer", {
     /**
      * Scrolls to the bottom of the current buffer.
      */
-    scrollBottom: function () {
+    scrollBottom() {
         Buffer.scrollElemToPercent(null, null, 100);
     },
 
@@ -726,14 +728,14 @@ const Buffer = Module("buffer", {
      * @param {number} cols The number of columns to scroll. A positive
      *     value scrolls right and a negative value left.
      */
-    scrollColumns: function (cols) {
+    scrollColumns(cols) {
         Buffer.scrollHorizontal(null, "columns", cols);
     },
 
     /**
      * Scrolls to the top of the current buffer.
      */
-    scrollEnd: function () {
+    scrollEnd() {
         Buffer.scrollElemToPercent(null, 100, null);
     },
 
@@ -743,7 +745,7 @@ const Buffer = Module("buffer", {
      * @param {number} lines The number of lines to scroll. A positive
      *     value scrolls down and a negative value up.
      */
-    scrollLines: function (lines) {
+    scrollLines(lines) {
         Buffer.scrollVertical(null, "lines", lines);
     },
 
@@ -753,7 +755,7 @@ const Buffer = Module("buffer", {
      * @param {number} pages The number of pages to scroll. A positive
      *     value scrolls down and a negative value up.
      */
-    scrollPages: function (pages) {
+    scrollPages(pages) {
         Buffer.scrollVertical(null, "pages", pages);
     },
 
@@ -765,7 +767,7 @@ const Buffer = Module("buffer", {
      * @param {number} count The multiple of 'scroll' lines to scroll.
      * @optional
      */
-    scrollByScrollSize: function (direction, count) {
+    scrollByScrollSize(direction, count) {
         direction = direction ? 1 : -1;
         count = count || 1;
         let elem = Buffer.findScrollable(direction, false);
@@ -776,7 +778,7 @@ const Buffer = Module("buffer", {
             elem.scrollTop += Buffer.findScrollableWindow().innerHeight / 2 * direction;
     },
 
-    _scrollByScrollSize: function _scrollByScrollSize(count, direction) {
+    _scrollByScrollSize(count, direction) {
         if (count > 0)
             options.scroll = count;
         buffer.scrollByScrollSize(direction);
@@ -788,7 +790,7 @@ const Buffer = Module("buffer", {
      * @param {number} x The horizontal page percentile.
      * @param {number} y The vertical page percentile.
      */
-    scrollToPercent: function (x, y) {
+    scrollToPercent(x, y) {
         Buffer.scrollElemToPercent(null, x, y);
     },
 
@@ -798,7 +800,7 @@ const Buffer = Module("buffer", {
      * @param {number} x The horizontal pixel.
      * @param {number} y The vertical pixel.
      */
-    scrollTo: function (x, y) {
+    scrollTo(x, y) {
         marks.add("'", true);
         config.browser.contentWindow.scrollTo(x, y);
     },
@@ -806,14 +808,14 @@ const Buffer = Module("buffer", {
     /**
      * Scrolls the current buffer laterally to its leftmost.
      */
-    scrollStart: function () {
+    scrollStart() {
         Buffer.scrollElemToPercent(null, 0, null);
     },
 
     /**
      * Scrolls the current buffer vertically to the top.
      */
-    scrollTop: function () {
+    scrollTop() {
         Buffer.scrollElemToPercent(null, null, 0);
     },
 
@@ -825,7 +827,7 @@ const Buffer = Module("buffer", {
      * @param {number} count The number of frames to skip through.
      * @param {boolean} forward The direction of motion.
      */
-    shiftFrameFocus: function (count, forward) {
+    shiftFrameFocus(count, forward) {
         let content = config.browser.contentWindow;
         if (!(content.document instanceof HTMLDocument))
             return;
@@ -904,7 +906,7 @@ const Buffer = Module("buffer", {
      *
      * @param {Node} elem The element to query.
      */
-    showElementInfo: function (elem) {
+    showElementInfo(elem) {
         liberator.echo(xml`Element:<br/>${util.objectToString(elem, true)}`, commandline.FORCE_MULTILINE);
     },
 
@@ -915,7 +917,7 @@ const Buffer = Module("buffer", {
      * @param {string} sections A string limiting the displayed sections.
      * @default The value of 'pageinfo'.
      */
-    showPageInfo: function (verbose, sections) {
+    showPageInfo(verbose, sections) {
         // Ctrl-g single line output
         if (!verbose) {
             let content = config.browser.contentWindow;
@@ -923,7 +925,7 @@ const Buffer = Module("buffer", {
             let title = content.document.title || "[No Title]";
 
             let info = template.map2(xml, "gf",
-                function (opt) template.map2(xml, buffer.pageInfo[opt][0](), util.identity, ", "),
+                opt => template.map2(xml, buffer.pageInfo[opt][0](), util.identity, ", "),
                 ", ");
 
             if (bookmarks.isBookmarked(this.URL))
@@ -946,7 +948,7 @@ const Buffer = Module("buffer", {
      * Opens a viewer to inspect the source of the currently selected
      * range.
      */
-    viewSelectionSource: function () {
+    viewSelectionSource() {
         // copied (and tuned somebit) from browser.jar -> nsContextMenu.js
         let focusedWindow = document.commandDispatcher.focusedWindow;
         if (focusedWindow == window)
@@ -974,7 +976,7 @@ const Buffer = Module("buffer", {
      * @default The current buffer.
      * @param {boolean} useExternalEditor View the source in the external editor.
      */
-    viewSource: function (url, useExternalEditor) {
+    viewSource(url, useExternalEditor) {
         url = url || buffer.URI;
 
         if (useExternalEditor)
@@ -995,7 +997,7 @@ const Buffer = Module("buffer", {
      * @param {number} steps The number of zoom levels to jump.
      * @param {boolean} fullZoom Whether to use full zoom or text zoom.
      */
-    zoomIn: function (steps, fullZoom) {
+    zoomIn(steps, fullZoom) {
         Buffer.bumpZoomLevel(steps, fullZoom);
     },
 
@@ -1005,14 +1007,14 @@ const Buffer = Module("buffer", {
      * @param {number} steps The number of zoom levels to jump.
      * @param {boolean} fullZoom Whether to use full zoom or text zoom.
      */
-    zoomOut: function (steps, fullZoom) {
+    zoomOut(steps, fullZoom) {
         Buffer.bumpZoomLevel(-steps, fullZoom);
     }
 }, {
     ZOOM_MIN: "ZoomManager" in window && Math.round(ZoomManager.MIN * 100),
     ZOOM_MAX: "ZoomManager" in window && Math.round(ZoomManager.MAX * 100),
 
-    get focusedWindow() this.getFocusedWindow(),
+    get focusedWindow() { return this.getFocusedWindow(); },
     set focusedWindow(win) {
         if (win === document.commandDispatcher.focusedWindow) return;
 
@@ -1024,7 +1026,7 @@ const Buffer = Module("buffer", {
         win.focus();
     },
 
-    getFocusedWindow: function (win) {
+    getFocusedWindow(win) {
         win = win || config.browser.contentWindow;
         let elem = win.document.activeElement;
         if (elem) {
@@ -1037,7 +1039,7 @@ const Buffer = Module("buffer", {
             return win;
     },
 
-    setZoom: function setZoom(value, fullZoom, browser = config.tabbrowser.mCurrentBrowser) {
+    setZoom(value, fullZoom, browser = config.tabbrowser.mCurrentBrowser) {
         liberator.assert(value >= Buffer.ZOOM_MIN || value <= Buffer.ZOOM_MAX,
             "Zoom value out of range (" + Buffer.ZOOM_MIN + " - " + Buffer.ZOOM_MAX + "%)");
 
@@ -1050,7 +1052,7 @@ const Buffer = Module("buffer", {
         statusline.updateField("zoomlevel", value);
     },
 
-    bumpZoomLevel: function bumpZoomLevel(steps, fullZoom) {
+    bumpZoomLevel(steps, fullZoom) {
         let values = ZoomManager.zoomValues;
         let cur = values.indexOf(ZoomManager.snap(ZoomManager.zoom));
         let i = util.Math.constrain(cur + steps, 0, values.length - 1);
@@ -1061,13 +1063,13 @@ const Buffer = Module("buffer", {
         Buffer.setZoom(Math.round(values[i] * 100), fullZoom);
     },
 
-    checkScrollYBounds: function checkScrollYBounds(win, direction) {
+    checkScrollYBounds(win, direction) {
         // NOTE: it's possible to have scrollY > scrollMaxY - FF bug?
         if (direction > 0 && win.scrollY >= win.scrollMaxY || direction < 0 && win.scrollY == 0)
             liberator.beep();
     },
 
-    findScrollableWindow: function findScrollableWindow() {
+    findScrollableWindow() {
         let win = this.focusedWindow;
         if (win && (win.scrollMaxX > 0 || win.scrollMaxY > 0))
             return win;
@@ -1076,14 +1078,14 @@ const Buffer = Module("buffer", {
         if (win.scrollMaxX > 0 || win.scrollMaxY > 0)
             return win;
 
-        for (let frame in util.Array.itervalues(win.frames))
+        for (let frame of Array.from(win.frames))
             if (frame.scrollMaxX > 0 || frame.scrollMaxY > 0)
                 return frame;
 
         return win;
     },
 
-    findScrollable: function findScrollable(dir = 0, horizontal) {
+    findScrollable(dir = 0, horizontal) {
         let pos = "scrollTop", maxPos = "scrollTopMax", clientSize = "clientHeight";
         if (horizontal)
             pos = "scrollLeft", maxPos = "scrollLeftMax", clientSize = "clientWidth";
@@ -1112,7 +1114,7 @@ const Buffer = Module("buffer", {
         return elem;
     },
 
-    scrollVertical: function scrollVertical(elem, increment, number) {
+    scrollVertical(elem, increment, number) {
         elem = elem || Buffer.findScrollable(number, false);
 
         if (elem == null && buffer.loaded == 0) {
@@ -1131,7 +1133,7 @@ const Buffer = Module("buffer", {
         elem.scrollTop += number * increment;
     },
 
-    scrollHorizontal: function scrollHorizontal(elem, increment, number) {
+    scrollHorizontal(elem, increment, number) {
         elem = elem || Buffer.findScrollable(number, true);
 
         if (elem == null && buffer.loaded == 0) {
@@ -1150,7 +1152,7 @@ const Buffer = Module("buffer", {
         elem.scrollLeft += number * increment;
     },
 
-    scrollElemToPercent: function scrollElemToPercent(elem, horizontal, vertical) {
+    scrollElemToPercent(elem, horizontal, vertical) {
         elem = elem || Buffer.findScrollable();
         marks.add("'", true);
 
@@ -1161,7 +1163,7 @@ const Buffer = Module("buffer", {
             elem.scrollTop = (elem.scrollHeight - elem.clientHeight) * (vertical / 100);
     },
 
-    scrollToPercent: function scrollToPercent(horizontal, vertical) {
+    scrollToPercent(horizontal, vertical) {
         let win = Buffer.findScrollableWindow();
         let h, v;
 
@@ -1179,7 +1181,7 @@ const Buffer = Module("buffer", {
         win.scrollTo(h, v);
     },
 
-    openUploadPrompt: function openUploadPrompt(elem) {
+    openUploadPrompt(elem) {
         commandline.input("Upload file: ", function (path) {
             let file = io.File(path);
             liberator.assert(file.exists());
@@ -1191,7 +1193,7 @@ const Buffer = Module("buffer", {
         });
     }
 }, {
-    commands: function () {
+    commands() {
         commands.add(["frameo[nly]"],
             "Show only the current frame's page",
             function (args) {
@@ -1250,7 +1252,7 @@ const Buffer = Module("buffer", {
             function (args) {
                 let arg = args.literalArg;
 
-                let titles = buffer.alternateStyleSheets.map(function (stylesheet) stylesheet.title);
+                let titles = buffer.alternateStyleSheets.map(stylesheet => stylesheet.title);
 
                 liberator.assert(!arg || titles.indexOf(arg) >= 0,
                     "Invalid argument: " + arg);
@@ -1262,7 +1264,7 @@ const Buffer = Module("buffer", {
             },
             {
                 argCount: "?",
-                completer: function (context) completion.alternateStyleSheet(context),
+                completer(context) { return completion.alternateStyleSheet(context); },
                 literal: 0
             });
 
@@ -1310,7 +1312,7 @@ const Buffer = Module("buffer", {
             {
                 argCount: "?",
                 bang: true,
-                completer: function (context) completion.file(context)
+                completer(context) { return completion.file(context); }
             });
 
         commands.add(["st[op]"],
@@ -1324,7 +1326,7 @@ const Buffer = Module("buffer", {
             {
                 argCount: "?",
                 bang: true,
-                completer: function (context) completion.url(context, "bhf")
+                completer(context) { return completion.url(context, "bhf"); }
             });
 
         commands.add(["zo[om]"],
@@ -1444,11 +1446,11 @@ const Buffer = Module("buffer", {
             context.keys = { text: "text", description: "url", icon: "icon" };
             context.compare = CompletionContext.Sort.number;
             let process = context.process[0];
-            context.process = [function (item, text)
-                    xml`
+            context.process = [function (item, text) {
+                    return xml`
                         <span highlight="Indicator" style="display: inline-block; width: 2ex; padding-right: 0.5ex; text-align: right">${item.item.indicator}</span>
                         ${ process.call(this, item, text) }
-                    `];
+                    `}];
 
             let tabs;
             if (!flags) {
@@ -1465,7 +1467,7 @@ const Buffer = Module("buffer", {
         completion.buffer.VISIBLE = 1 << 0;
         completion.buffer.GROUPS  = 1 << 1;
     },
-    events: function () {
+    events() {
         this.progressListener = update(Object.create(window.XULBrowserWindow), this.progressListener);
         window.XULBrowserWindow = this.progressListener;
         window.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -1485,7 +1487,7 @@ const Buffer = Module("buffer", {
             events.addSessionListener(appContent, "scroll", this.closure._updateBufferPosition, false);
         }
     },
-    mappings: function () {
+    mappings() {
         var myModes = config.browserModes;
 
         mappings.add(myModes, ["."],
@@ -1640,7 +1642,7 @@ const Buffer = Module("buffer", {
                                  "iframe"];
 
                     let elements = [];
-                    for (let m in util.evaluateXPath(xpath)) {
+                    for (const m of util.evaluateXPath(xpath)) {
                         if (m.getClientRects().length
                         && (!(m instanceof HTMLIFrameElement) || Editor.windowIsEditable(m.contentWindow)))
                             elements.push(m);
@@ -1754,7 +1756,7 @@ const Buffer = Module("buffer", {
             "Print file information",
             function () { buffer.showPageInfo(true); commandline.show("pageinfo"); });
     },
-    options: function () {
+    options() {
         options.add(["nextpattern"], // \u00BB is » (>> in a single char)
             "Patterns to use when guessing the 'next' page in a document sequence",
             "stringlist", "\\bnext\\b,^>$,^(>>|\u00BB)$,^(>|\u00BB),(>|\u00BB)$,\\bmore\\b");
@@ -1775,18 +1777,20 @@ const Buffer = Module("buffer", {
         options.add(["scroll", "scr"],
             "Number of lines to scroll with <C-u> and <C-d> commands",
             "number", 0,
-            { validator: function (value) value >= 0 });
+            { validator(value) { return value >= 0 } });
 
         options.add(["showstatuslinks", "ssli"],
             "Show the destination of the link under the cursor in the status bar",
             "number", 1,
             {
-                completer: function (context) [
-                    ["0", "Don't show link destination"],
-                    ["1", "Show the link destination in the status line"],
-                    ["2", "Show the link destination in the command line"],
-                    ["3", "Show the link destination in the content area"]
-                ]
+                completer(context) {
+                    return [
+                        ["0", "Don't show link destination"],
+                        ["1", "Show the link destination in the status line"],
+                        ["2", "Show the link destination in the command line"],
+                        ["3", "Show the link destination in the content area"]
+                    ];
+                }
             });
 
         // TODO: Fix the compose window
@@ -1795,8 +1799,8 @@ const Buffer = Module("buffer", {
                 "Show current website with a minimal style sheet to make it easily accessible",
                 "boolean", false,
                 {
-                    setter: function (value) config.browser.markupDocumentViewer.authorStyleDisabled = value,
-                    getter: function () config.browser.markupDocumentViewer.authorStyleDisabled
+                    setter(value) { return config.browser.markupDocumentViewer.authorStyleDisabled = value; },
+                    getter() { return config.browser.markupDocumentViewer.authorStyleDisabled; }
                 });
         }
     }

@@ -27,7 +27,7 @@
  * @private
  */
 const Option = Class("Option", {
-    init: function (names, description, type, defaultValue, extraInfo) {
+    init(names, description, type, defaultValue, extraInfo) {
         this.name = names[0];
         this.names = names;
         this.type = type;
@@ -51,7 +51,7 @@ const Option = Class("Option", {
     },
 
     /** @property {value} The option's global value. @see #scope */
-    get globalValue() options.store.get(this.name),
+    get globalValue() { return options.store.get(this.name); },
     set globalValue(val) { options.store.set(this.name, val); },
 
     /**
@@ -61,7 +61,7 @@ const Option = Class("Option", {
      * @param {value} value The option value.
      * @returns {value|string[]}
      */
-    parseValues: function (value) {
+    parseValues(value) {
         if (this.type == "stringlist")
             return (value === "") ? [] : value.split(",");
         if (this.type == "charlist")
@@ -76,7 +76,7 @@ const Option = Class("Option", {
      * @param {value|string[]} values The option value.
      * @returns {value}
      */
-    joinValues: function (values) {
+    joinValues(values) {
         if (this.type == "stringlist")
             return values.join(",");
         if (this.type == "charlist")
@@ -85,8 +85,8 @@ const Option = Class("Option", {
     },
 
     /** @property {value|string[]} The option value or array of values. */
-    get values() this.parseValues(this.value),
-    set values(values) this.setValues(values, this.scope),
+    get values() { return this.parseValues(this.value); },
+    set values(values) { this.setValues(values, this.scope); },
 
     /**
      * Returns the option's value as an array of parsed values if the option
@@ -96,16 +96,17 @@ const Option = Class("Option", {
      *     {@link Option#scope}).
      * @returns {value|string[]}
      */
-    getValues: function (scope) this.parseValues(this.get(scope)),
+    getValues(scope) { return this.parseValues(this.get(scope)); },
 
     /**
      * Sets the option's value from an array of values if the option type is
      * "charlist" or "stringlist" or else the simple value.
      *
+     * @param {value|string[]} values
      * @param {number} scope The scope to apply these values to (see
      *     {@link Option#scope}).
      */
-    setValues: function (values, scope) {
+    setValues(values, scope) {
         this.set(this.joinValues(values), scope || this.scope);
     },
 
@@ -118,7 +119,7 @@ const Option = Class("Option", {
      *     {@link Option#scope}).
      * @returns {value}
      */
-    get: function (scope) {
+    get(scope) {
         if (scope) {
             if ((scope & this.scope) == 0) // option doesn't exist in this scope
                 return null;
@@ -148,7 +149,7 @@ const Option = Class("Option", {
      * @param {number} scope The scope to apply this value to (see
      *     {@link Option#scope}).
      */
-    set: function (newValue, scope) {
+    set(newValue, scope) {
         scope = scope || this.scope;
         if ((scope & this.scope) == 0) // option doesn't exist in this scope
             return;
@@ -169,8 +170,8 @@ const Option = Class("Option", {
      *     or if no local value is set, this is equal to the
      *     (@link #globalValue).
      */
-    get value() this.get(),
-    set value(val) this.set(val),
+    get value() { return this.get(); },
+    set value(val) { this.set(val); },
 
     /**
      * Returns whether the option value contains one or more of the specified
@@ -178,14 +179,13 @@ const Option = Class("Option", {
      *
      * @returns {boolean}
      */
-    has: function () {
-        let self = this;
-        let test = function (val) values.indexOf(val) >= 0;
+    has() {
+        let test = val => values.indexOf(val) >= 0;
         if (this.checkHas)
-            test = function (val) values.some(function (value) self.checkHas(value, val));
+            test = val => values.some(value => this.checkHas(value, val));
         let values = this.values;
         // return whether some argument matches
-        return Array.some(arguments, function (val) test(val));
+        return Array.some(arguments, val => test(val));
     },
 
     /**
@@ -194,18 +194,19 @@ const Option = Class("Option", {
      * @param {string} name
      * @returns {boolean}
      */
-    hasName: function (name) this.names.indexOf(name) >= 0,
+    hasName(name) { return this.names.indexOf(name) >= 0; },
 
     /**
      * Returns whether the specified <b>values</b> are valid for this option.
      * @see Option#validator
+     * @param {value[]} vs
      */
-    isValidValue: function (vs) this.validator(vs),
+    isValidValue(vs) { return this.validator(vs); },
 
     /**
      * Resets the option to its default value.
      */
-    reset: function () {
+    reset() {
         this.value = this.defaultValue;
     },
 
@@ -218,9 +219,8 @@ const Option = Class("Option", {
      *     {@link #scope}).
      * @param {boolean} invert Whether this is an invert boolean operation.
      */
-    op: function (operator, values, scope, invert) {
+    op(operator, values, scope, invert) {
         let newValue = null;
-        let self = this;
 
         switch (this.type) {
         case "boolean":
@@ -269,13 +269,13 @@ const Option = Class("Option", {
                 newValue = util.Array.uniq(Array.concat(values, this.values), true);
                 break;
             case "-":
-                newValue = this.values.filter(function (item) values.indexOf(item) == -1);
+                newValue = this.values.filter(item => values.indexOf(item) == -1);
                 break;
             case "=":
                 newValue = values;
                 if (invert) {
-                    let keepValues = this.values.filter(function (item) values.indexOf(item) == -1);
-                    let addValues  = values.filter(function (item) self.values.indexOf(item) == -1);
+                    let keepValues = this.values.filter(item => values.indexOf(item) == -1);
+                    let addValues  = values.filter(item => this.values.indexOf(item) == -1);
                     newValue = addValues.concat(keepValues);
                 }
                 break;
@@ -315,13 +315,13 @@ const Option = Class("Option", {
 
     // Properties {{{2
 
-    /** @property {string} The option's canonical name. */
+    /** @type {string} The option's canonical name. */
     name: null,
-    /** @property {string[]} All names by which this option is identified. */
+    /** @type {string[]} All names by which this option is identified. */
     names: null,
 
     /**
-     * @property {string} The option's data type. One of:
+     * @type {string} The option's data type. One of:
      *     "boolean"    - Boolean E.g. true
      *     "number"     - Integer E.g. 1
      *     "string"     - String E.g. "Vimperator"
@@ -331,7 +331,7 @@ const Option = Class("Option", {
     type: null,
 
     /**
-     * @property {number} The scope of the option. This can be local, global,
+     * @type {number} The scope of the option. This can be local, global,
      *     or both.
      * @see Option#SCOPE_LOCAL
      * @see Option#SCOPE_GLOBAL
@@ -340,7 +340,7 @@ const Option = Class("Option", {
     scope: 1, // Option.SCOPE_GLOBAL // XXX set to BOTH by default someday? - kstep
 
     /**
-     * @property {string} This option's description, as shown in :usage.
+     * @type {string} This option's description, as shown in :usage.
      */
     description: "",
 
@@ -368,7 +368,7 @@ const Option = Class("Option", {
      * @property {function} The function called to validate the option's value
      *     when set.
      */
-    validator: function () {
+    validator() {
         if (this.completer)
             return Option.validateCompleter.apply(this, arguments);
         return true;
@@ -421,12 +421,12 @@ const Option = Class("Option", {
      * @param {value|string[]} values The value or array of values to validate.
      * @returns {boolean}
      */
-    validateCompleter: function (values) {
+    validateCompleter(values) {
         let context = CompletionContext("");
         let res = context.fork("", 0, this, this.completer);
         if (!res)
-            res = context.allItems.items.map(function (item) [item.text]);
-        return Array.concat(values).every(function (value) res.some(function (item) item[0] == value));
+            res = context.allItems.items.map(item => [item.text]);
+        return Array.concat(values).every(value => res.some(item => item[0] == value));
     }
 });
 
@@ -436,7 +436,7 @@ const Option = Class("Option", {
 const Options = Module("options", {
     requires: ["config", "highlight", "storage"],
 
-    init: function () {
+    init() {
         this._optionHash = {};
         this._prefContexts = [];
 
@@ -474,33 +474,33 @@ const Options = Module("options", {
         this.prefObserver.register();
     },
 
-    destroy: function () {
+    destroy() {
         this.prefObserver.unregister();
     },
 
     /** @property {Iterator(Option)} @private */
-    __iterator__: function () {
+    __iterator__() {
         let sorted = Object.keys(this._optionHash)
             .map(i => this._optionHash[i])
-            .sort(function (a, b) String.localeCompare(a.name, b.name));
+            .sort((a, b) => String.localeCompare(a.name, b.name));
 
         return iter(sorted);
     },
 
     /** @property {Object} Observes preference value changes. */
     prefObserver: {
-        register: function () {
+        register() {
             // better way to monitor all changes?
             this._branch = services.get("prefs").getBranch("").QueryInterface(Ci.nsIPrefBranch2);
             this._branch.addObserver("", this, false);
         },
 
-        unregister: function () {
+        unregister() {
             if (this._branch)
                 this._branch.removeObserver("", this);
         },
 
-        observe: function (subject, topic, data) {
+        observe(subject, topic, data) {
             if (topic != "nsPref:changed")
                 return;
 
@@ -527,7 +527,7 @@ const Options = Module("options", {
      * @optional
      * @returns {Option} Returns the instace of Option, if the option was created.
      */
-    add: function (names, description, type, defaultValue, extraInfo) {
+    add(names, description, type, defaultValue, extraInfo) {
         if (!extraInfo)
             extraInfo = {};
 
@@ -543,8 +543,12 @@ const Options = Module("options", {
         }
 
         // quickly access options with options["wildmode"]:
-        this.__defineGetter__(option.name, function () option.value);
-        this.__defineSetter__(option.name, function (value) { option.value = value; });
+        Object.defineProperty(this, option.name, {
+            get() { return option.value; },
+            set(value) { option.value = value; },
+            enumerable: true,
+            configurable: true
+        });
 
         this._optionHash[option.name] = option;
         return option;
@@ -556,7 +560,7 @@ const Options = Module("options", {
      * @param {string} branch The branch in which to search preferences.
      *     @default ""
      */
-    allPrefs: function (branch) services.get("prefs").getChildList(branch || "", { value: 0 }),
+    allPrefs(branch) { return services.get("prefs").getChildList(branch || "", { value: 0 }); },
 
     /**
      * Returns the option with <b>name</b> in the specified <b>scope</b>.
@@ -566,7 +570,7 @@ const Options = Module("options", {
      * @optional
      * @returns {Option} The matching option.
      */
-    get: function (name, scope) {
+    get(name, scope) {
         if (!scope)
             scope = Option.SCOPE_BOTH;
 
@@ -590,7 +594,7 @@ const Options = Module("options", {
      * @param {number} scope Only list options in this scope (see
      *     {@link Option#scope}).
      */
-    list: function (onlyNonDefault, scope) {
+    list(onlyNonDefault, scope) {
         if (!scope)
             scope = Option.SCOPE_BOTH;
 
@@ -634,7 +638,7 @@ const Options = Module("options", {
      *     prefs.
      * @optional
      */
-    listPrefs: function (onlyNonDefault, filter) {
+    listPrefs(onlyNonDefault, filter) {
         if (!filter)
             filter = "";
 
@@ -673,7 +677,7 @@ const Options = Module("options", {
      * @optional
      * @returns {Object} The parsed command object.
      */
-    parseOpt: function parseOpt(args, modifiers) {
+    parseOpt(args, modifiers) {
         let ret = {};
         let matches, prefix, postfix, valueGiven;
 
@@ -721,7 +725,7 @@ const Options = Module("options", {
      * @param {string} name The name of the option to remove. This can be
      *     any of the options's names.
      */
-    remove: function (name) {
+    remove(name) {
         for (let option of this._optionHash) {
             if (option.hasName(name))
                 delete this._optionHash[option.name];
@@ -729,7 +733,7 @@ const Options = Module("options", {
     },
 
     /** @property {Object} The options store. */
-    get store() storage.options,
+    get store() { return storage.options; },
 
     /**
      * Returns the value of the preference <b>name</b>.
@@ -738,7 +742,7 @@ const Options = Module("options", {
      * @param {value} forcedDefault The default value for this
      *     preference. Used for internal liberator preferences.
      */
-    getPref: function (name, forcedDefault) {
+    getPref(name, forcedDefault) {
         return this._loadPreference(name, forcedDefault);
     },
 
@@ -748,9 +752,10 @@ const Options = Module("options", {
      *
      * @param {string} name The preference name.
      * @param {value} value The new preference value.
+     * @param {string} message
      */
     // FIXME: Well it used to. I'm looking at you mst! --djk
-    safeSetPref: function (name, value, message) {
+    safeSetPref(name, value, message) {
         let val = this._loadPreference(name, null, false);
         let def = this._loadPreference(name, null, true);
         let lib = this._loadPreference(Options.SAVED + name);
@@ -770,7 +775,7 @@ const Options = Module("options", {
      * @param {string} name The preference name.
      * @param {value} value The new preference value.
      */
-    setPref: function (name, value) {
+    setPref(name, value) {
         this._storePreference(name, value);
     },
 
@@ -779,7 +784,7 @@ const Options = Module("options", {
      *
      * @param {string} name The preference name.
      */
-    resetPref: function (name) {
+    resetPref(name) {
         try {
             services.get("prefs").clearUserPref(name);
         }
@@ -793,7 +798,7 @@ const Options = Module("options", {
      *
      * @param {string} name The preference name.
      */
-    invertPref: function (name) {
+    invertPref(name) {
         if (services.get("prefs").getPrefType(name) == Ci.nsIPrefBranch.PREF_BOOL)
             this.setPref(name, !this.getPref(name));
         else
@@ -805,7 +810,7 @@ const Options = Module("options", {
      *
      * @see #withContext
      */
-    pushContext: function () {
+    pushContext() {
         this._prefContexts.push({});
     },
 
@@ -814,7 +819,7 @@ const Options = Module("options", {
      *
      * @see #withContext
      */
-    popContext: function () {
+    popContext() {
         for (let [k, v] in Iterator(this._prefContexts.pop()))
             this._storePreference(k, v);
     },
@@ -830,7 +835,7 @@ const Options = Module("options", {
      * @see #pushContext
      * @see #popContext
      */
-    withContext: function (func, self) {
+    withContext(func, self) {
         try {
             this.pushContext();
             return func.call(self);
@@ -840,7 +845,7 @@ const Options = Module("options", {
         }
     },
 
-    _storePreference: function (name, value) {
+    _storePreference(name, value) {
         if (this._prefContexts.length) {
             let val = this._loadPreference(name, null);
             if (val != null)
@@ -879,7 +884,7 @@ const Options = Module("options", {
         }
     },
 
-    _loadPreference: function (name, forcedDefault, defaultBranch) {
+    _loadPreference(name, forcedDefault, defaultBranch) {
         let defaultValue = null; // XXX
         if (forcedDefault != null)  // this argument sets defaults for non-user settable options (like extensions.history.comp_history)
             defaultValue = forcedDefault;
@@ -911,7 +916,7 @@ const Options = Module("options", {
     SAVED: "extensions.liberator.saved.",
     OLD_SAVED: "liberator.saved."
 }, {
-    commandline: function () {
+    commandline() {
         // TODO: maybe reset in .destroy()?
         // TODO: move to buffer.js
         // we have our own typeahead find implementation
@@ -919,13 +924,13 @@ const Options = Module("options", {
         options.safeSetPref("accessibility.typeaheadfind.autostart", false);
         options.safeSetPref("accessibility.typeaheadfind", false); // actually the above setting should do it, but has no effect in Firefox
     },
-    commands: function () {
+    commands() {
         function setAction(args, modifiers) {
             let bang = args.bang;
             if (!args.length)
                 args[0] = "";
 
-            for (let [, arg] in args) {
+            for (const arg of args) {
                 if (bang) {
                     let onlyNonDefault = false;
                     let reset = false;
@@ -1053,7 +1058,7 @@ const Options = Module("options", {
                     context.completions = [
                             [options._loadPreference(filter, null, false), "Current Value"],
                             [options._loadPreference(filter, null, true), "Default Value"]
-                    ].filter(function ([k]) k != null);
+                    ].filter(([k]) => k != null);
                     return null;
                 }
 
@@ -1065,7 +1070,7 @@ const Options = Module("options", {
 
             if (context.filter.indexOf("=") == -1) {
                 if (prefix)
-                    context.filters.push(function ({ item: opt }) opt.type == "boolean" || prefix == "inv" && opt.values instanceof Array);
+                    context.filters.push(({ item: opt }) => opt.type == "boolean" || prefix == "inv" && opt.values instanceof Array);
                 return completion.option(context, opt.scope);
             }
             else if (prefix == "no")
@@ -1092,7 +1097,7 @@ const Options = Module("options", {
                     completions.push([!option.value, "Inverted current value"]);
                     context.completions = completions;
                 } else {
-                    context.completions = completions.filter(function (f) f[0] != "");
+                    context.completions = completions.filter(f => f[0] != "");
                 }
             });
 
@@ -1185,7 +1190,7 @@ const Options = Module("options", {
             {
                 bang: true,
                 count: true,
-                completer: function (context, args) {
+                completer(context, args) {
                     return setCompleter(context, args, { scope: Option.SCOPE_LOCAL });
                 },
                 literal: 0
@@ -1201,7 +1206,7 @@ const Options = Module("options", {
             {
                 bang: true,
                 count: true,
-                completer: function (context, args) {
+                completer(context, args) {
                     return setCompleter(context, args, { scope: Option.SCOPE_GLOBAL });
                 },
                 literal: 0
@@ -1213,10 +1218,10 @@ const Options = Module("options", {
             function (args, modifiers) { setAction(args, modifiers); },
             {
                 bang: true,
-                completer: function (context, args) {
+                completer(context, args) {
                     return setCompleter(context, args);
                 },
-                serial: function () {
+                serial() {
                     return Array.from(iter(options))
                         .filter(opt => !opt.getter && opt.value != opt.defaultValue && (opt.scope & Option.SCOPE_GLOBAL))
                         .map(opt => ({
@@ -1230,7 +1235,7 @@ const Options = Module("options", {
         commands.add(["unl[et]"],
             "Delete a variable",
             function (args) {
-                for (let [, name] in args) {
+                for (const name of args) {
                     let reference = liberator.variableReference(name);
                     if (!reference[0]) {
                         if (!args.bang)
@@ -1246,17 +1251,17 @@ const Options = Module("options", {
                 bang: true
             });
     },
-    completion: function () {
-        JavaScript.setCompleter(this.get, [function () iter(Array.from(iter(options)).map(o => [o.name, o.description]))]);
+    completion() {
+        JavaScript.setCompleter(this.get, [() => iter(Array.from(iter(options)).map(o => [o.name, o.description]))]);
         JavaScript.setCompleter([this.getPref, this.safeSetPref, this.setPref, this.resetPref, this.invertPref],
-                [function () options.allPrefs().map(function (pref) [pref, ""])]);
+                [() => options.allPrefs().map(pref => [pref, ""])]);
 
         completion.option = function option(context, scope) {
             context.title = ["Option"];
             context.keys = { text: "names", description: "description" };
             context.completions = options;
             if (scope)
-                context.filters.push(function ({ item: opt }) opt.scope & scope);
+                context.filters.push(({ item: opt }) => opt.scope & scope);
         };
 
         completion.optionValue = function (context, name, op, curValue) {
@@ -1271,7 +1276,7 @@ const Options = Module("options", {
             let len = context.filter.length;
             switch (opt.type) {
             case "boolean":
-                completer = function () [["true", ""], ["false", ""]];
+                completer = () => [["true", ""], ["false", ""]];
                 break;
             case "stringlist":
                 let target = newValues.pop();
@@ -1291,13 +1296,13 @@ const Options = Module("options", {
             // Not Vim compatible, but is a significant enough improvement
             // that it's worth breaking compatibility.
             if (newValues instanceof Array) {
-                completions = completions.filter(function (val) newValues.indexOf(val[0]) == -1);
+                completions = completions.filter(val => newValues.indexOf(val[0]) == -1);
                 switch (op) {
                 case "+":
-                    completions = completions.filter(function (val) curValues.indexOf(val[0]) == -1);
+                    completions = completions.filter(val => curValues.indexOf(val[0]) == -1);
                     break;
                 case "-":
-                    completions = completions.filter(function (val) curValues.indexOf(val[0]) > -1);
+                    completions = completions.filter(val => curValues.indexOf(val[0]) > -1);
                     break;
                 }
             }
@@ -1307,7 +1312,7 @@ const Options = Module("options", {
         completion.preference = function preference(context) {
             context.anchored = false;
             context.title = [config.hostApplication + " Preference", "Value"];
-            context.keys = { text: function (item) item, description: function (item) options.getPref(item) };
+            context.keys = { text(item) { return item; }, description(item) { return options.getPref(item); } };
             context.completions = options.allPrefs();
         };
     }
