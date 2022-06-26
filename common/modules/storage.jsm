@@ -157,11 +157,21 @@ function savePref(obj) {
 
 var prototype = {
     OPTIONS: ["privateData"],
-    fireEvent: function (event, arg) { storage.fireEvent(this.name, event, arg); },
-    save: function () { savePref(this); },
-    init: function (name, store, data, options) {
-        this.__defineGetter__("store", function () store);
-        this.__defineGetter__("name", function () name);
+    fireEvent(event, arg) { storage.fireEvent(this.name, event, arg); },
+    save() { savePref(this); },
+    init(name, store, data, options) {
+        Object.defineProperties(this, {
+            store: {
+                get() { return store },
+                enumerable: true,
+                configurable: true
+            },
+            name: {
+                get() { return name },
+                enumerable: true,
+                configurable: true
+            }
+        });
         for (let [k, v] in Iterator(options))
             if (this.OPTIONS.indexOf(k) >= 0)
                 this[k] = v;
@@ -178,7 +188,11 @@ function ObjectStore(name, store, load, options) {
     };
 
     this.init.apply(this, arguments);
-    this.__defineGetter__("serial", function () JSON.stringify(object));
+    Object.defineProperty(this, "serial", {
+        get() { return JSON.stringify(object); },
+        enumerable: true,
+        configurable: true
+    });
 
     this.set = function set(key, val) {
         var defined = key in object;
@@ -197,13 +211,13 @@ function ObjectStore(name, store, load, options) {
         return ret;
     };
 
-    this.get = function get(val, default_) val in object ? object[val] : default_;
+    this.get = function get(val, default_) { return val in object ? object[val] : default_; };
 
     this.clear = function () {
         object = {};
     };
 
-    this.__iterator__ = function () Iterator(object);
+    this.__iterator__ = function () { return Iterator(object); };
 }
 ObjectStore.prototype = prototype;
 
@@ -216,8 +230,18 @@ function ArrayStore(name, store, load, options) {
     };
 
     this.init.apply(this, arguments);
-    this.__defineGetter__("serial", function () JSON.stringify(array));
-    this.__defineGetter__("length", function () array.length);
+    Object.defineProperties(this, {
+        serial: {
+            get() { return JSON.stringify(array); },
+            enumerable: true,
+            configurable: true
+        },
+        length: {
+            get() { return array.length; },
+            enumerable: true,
+            configurable: true
+        }
+    });
 
     this.set = function set(index, value) {
         var orig = array[index];
@@ -259,17 +283,27 @@ function ArrayStore(name, store, load, options) {
         return index >= 0 ? array[index] : array[array.length + index];
     };
 
-    this.__iterator__ = function () Iterator(array);
+    this.__iterator__ = function () { return Iterator(array); };
 }
 ArrayStore.prototype = prototype;
 
+/**
+ * @template {string} key
+ * @type {{key: ObjectStore | ArrayStore}}
+ */
 var keys = {};
+/**
+ * @type {{key: [{ref: boolean, callback: function}]}}
+ */
 var observers = {};
+/**
+ * @type {{key: Timer}}
+ */
 var timers = {};
 
 var storage = {
     alwaysReload: {},
-    newObject: function newObject(key, constructor, params) {
+    newObject(key, constructor, params) {
         if (!params.reload && !params.store) {
             let enumerator = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator).getEnumerator("navigator:browser");
             params.reload = enumerator.hasMoreElements() && enumerator.getNext() && !enumerator.hasMoreElements();
@@ -278,23 +312,27 @@ var storage = {
         if (!(key in keys) || params.reload || this.alwaysReload[key]) {
             if (key in this && !(params.reload || this.alwaysReload[key]))
                 throw Error();
-            let load = function () loadPref(key, params.store, params.type || Object);
+            const load = function () { return loadPref(key, params.store, params.type || Object); };
             keys[key] = new constructor(key, params.store, load, params);
-            timers[key] = new Timer(1000, 10000, function () storage.save(key));
-            this.__defineGetter__(key, function () keys[key]);
+            timers[key] = new Timer(1000, 10000, () => storage.save(key));
+            Object.defineProperty(this, key, {
+                get() { return keys[key]; },
+                enumerable: true,
+                configurable: true
+            });
         }
         return keys[key];
     },
 
-    newMap: function newMap(key, options) {
+    newMap(key, options) {
         return this.newObject(key, ObjectStore, options);
     },
 
-    newArray: function newArray(key, options) {
+    newArray(key, options) {
         return this.newObject(key, ArrayStore, options);
     },
 
-    addObserver: function addObserver(key, callback, ref) {
+    addObserver(key, callback, ref) {
         if (ref) {
             if (!ref.liberatorStorageRefs)
                 ref.liberatorStorageRefs = [];
@@ -302,56 +340,56 @@ var storage = {
             var callbackRef = Cu.getWeakReference(callback);
         }
         else {
-            callbackRef = { get: function () callback };
+            callbackRef = { get() { return callback; } };
         }
         this.removeDeadObservers();
         if (!(key in observers))
             observers[key] = [];
-        if (!observers[key].some(function (o) o.callback.get() == callback))
+        if (!observers[key].some(o => o.callback.get() == callback))
             observers[key].push({ ref: ref && Cu.getWeakReference(ref), callback: callbackRef });
     },
 
-    removeObserver: function (key, callback) {
+    removeObserver(key, callback) {
         this.removeDeadObservers();
         if (!(key in observers))
             return;
-        observers[key] = observers[key].filter(function (elem) elem.callback.get() != callback);
+        observers[key] = observers[key].filter(elem => elem.callback.get() != callback);
         if (observers[key].length == 0)
-            delete obsevers[key];
+            delete observers[key];
     },
 
-    removeDeadObservers: function () {
+    removeDeadObservers() {
         for (let [key, ary] in Iterator(observers)) {
-            observers[key] = ary = ary.filter(function (o) o.callback.get() && (!o.ref || o.ref.get() && o.ref.get().liberatorStorageRefs));
+            observers[key] = ary = ary.filter(o => o.callback.get() && (!o.ref || o.ref.get() && o.ref.get().liberatorStorageRefs));
             if (!ary.length)
                 delete observers[key];
         }
     },
 
-    get observers() observers,
+    get observers() { return observers; },
 
-    fireEvent: function fireEvent(key, event, arg) {
+    fireEvent(key, event, arg) {
         if (!(key in this))
             return;
         this.removeDeadObservers();
         // Safe, since we have our own Array object here.
         if (key in observers)
-            for each (let observer in observers[key])
-                observer.callback.get()(key, event, arg);
+            for (let observer of observers[key])
+                observer.callback.get()(key, event, arg)
         timers[key].tell();
     },
 
-    load: function load(key) {
+    loadload(key) {
         if (this[key].store && this[key].reload)
             this[key].reload();
     },
 
-    save: function save(key) {
+    save(key) {
         savePref(keys[key]);
     },
 
-    saveAll: function storeAll() {
-        for each (let obj in keys)
+    saveAll() {
+        for (const obj of Object.values(keys))
             savePref(obj);
     },
 
