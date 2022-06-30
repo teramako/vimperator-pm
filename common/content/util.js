@@ -172,12 +172,12 @@ const Util = Module("util", {
      * tests. An expression is built with node tests for both the null and
      * XHTML namespaces. See {@link Buffer#evaluateXPath}.
      *
-     * @param nodes {Array(string)}
+     * @param nodes {string[]}
      * @returns {string}
      */
     makeXPath(nodes) {
-        return util.Array(nodes).map(function (node) { return [node, "xhtml:" + node]; }).flatten()
-                                .map(function (node) { return "//" + node; }).join(" | ");
+        return Array.from(nodes, node => [node, "xhtml:" + node]).flat()
+                    .map(node => "//" + node).join(" | ");
     },
 
     /**
@@ -308,7 +308,7 @@ const Util = Module("util", {
                         if (node instanceof HTMLHtmlElement)
                             data.push(" xmlns=" + JSON.stringify(XHTML.uri));
 
-                        for (let { name: name, value: value } in util.Array.itervalues(node.attributes)) {
+                        for (let { name, value } of node.attributes) {
                             if (name === "liberator:highlight") {
                                 name = "class";
                                 value = "hl-" + value;
