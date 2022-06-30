@@ -286,9 +286,8 @@ const Util = Module("util", {
         function addDataEntry(file, data) // Inideal to an extreme.
             addURIEntry(file, "data:text/plain;charset=UTF-8," + encodeURI(data))
 
-        let empty = util.Array.toObject(
-            "area base basefont br col frame hr img input isindex link meta param"
-            .split(" ").map(Array.concat));
+        const empty = "area base basefont br col frame hr img input isindex link meta param"
+            .split(" ").reduce((obj, v, i) => { obj[v] = i; return obj; }, {});
 
         let chrome = {};
         for (let [file,] in Iterator(services.get("liberator:").FILE_MAP)) {
@@ -524,11 +523,7 @@ const Util = Module("util", {
         if (typeof object != "object")
             return false;
 
-        const NAMESPACES = util.Array.toObject([
-            [NS, 'liberator'],
-            [XHTML, 'html'],
-            [XUL, 'xul']
-        ]);
+        const NAMESPACES = [NS,XHTML,XUL].reduce((obj, ns)=>{ obj[ns.uri]=ns.prefix; return obj; }, {});
         if (object instanceof Element) {
             let elem = object;
             if (elem.nodeType === elem.TEXT_NODE)
@@ -858,22 +853,6 @@ const Util = Module("util", {
     }, {
         isinstance(obj) {
             return Object.prototype.toString.call(obj) === "[object Array]";
-        },
-
-        /**
-         * Converts an array to an object. As in lisp, an assoc is an
-         * array of key-value pairs, which maps directly to an object,
-         * as such:
-         *    [["a", "b"], ["c", "d"]] -> { a: "b", c: "d" }
-         *
-         * @param {Array[]} assoc
-         * @... {string} 0 - Key
-         * @...          1 - Value
-         */
-        toObject(assoc) {
-            let obj = {};
-            assoc.forEach(function ([k, v]) { obj[k] = v; });
-            return obj;
         },
 
         /**

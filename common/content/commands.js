@@ -1166,8 +1166,7 @@ const Commands = Module("commands", {
                         .map(cmd => ({
                             command: this.name,
                             bang: true,
-                            options: util.Array.toObject(
-                                (function() {
+                            options: (function() {
                                     let options = {
                                         argCount: "-nargs",
                                         bang: "-bang",
@@ -1177,8 +1176,10 @@ const Commands = Module("commands", {
 
                                     return Object.keys(options)
                                                  .filter(k => k in cmd && cmd[k] != "0" && cmd[k] != "User-defined command")
-                                                 .map(k => [options[k], typeof cmd[k] == "boolean" ? null : cmd[k]]);
-                                }())
+                                                 .reduce((opt, k) => {
+                                                    opt[options[k]] = typeof cmd[k] == "boolean" ? null : cmd[k];
+                                                    return opt; }, {});
+                                }()
                             ),
                             arguments: [cmd.name],
                             literalArg: cmd.replacementText
