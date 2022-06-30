@@ -1617,7 +1617,7 @@ const CommandLine = Module("commandline", {
             "Items which are completed at the :open prompts",
             "charlist", typeof(config.defaults.complete) == "string" ? config.defaults.complete : "sl",
             {
-                completer(context) { return array(values(completion.urlCompleters)); }
+                completer(context) { return Object.values(completion.urlCompleters); }
             });
 
         options.add(["history", "hi"],

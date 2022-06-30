@@ -41,9 +41,7 @@ const Option = Class("Option", {
 
         // add no{option} variant of boolean {option} to this.names
         if (this.type == "boolean") {
-            this.names = array(Object.keys(names)
-                .map(k => [names[k], "no" + names[k]]))
-                .flatten().__proto__;
+            this.names = names.map(name => [name, "no" + name]).flat();
         }
 
         if (this.globalValue == undefined)

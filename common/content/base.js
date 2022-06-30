@@ -8,14 +8,6 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-function array(obj) {
-    if (isgenerator(obj))
-        obj = Array.from(obj);
-    else if (obj.length)
-        obj = Array.slice(obj);
-    return util.Array(obj);
-}
-
 function allkeys(obj) {
     for(; obj; obj = obj.__proto__)
         for (let prop of Object.getOwnPropertyNames(obj))

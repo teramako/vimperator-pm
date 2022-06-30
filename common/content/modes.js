@@ -174,7 +174,7 @@ const Modes = Module("modes", {
     matchModes(obj) {
         return Object.keys(this._modeMap)
                      .map(k => this._modeMap[k])
-                     .filter(m => array(keys(obj)).every(k => obj[k] == (m[k] || false)));
+                     .filter(m => Object.keys(obj).every(k => obj[k] == (m[k] || false)));
     },
 
     // show the current mode string in the command line
