@@ -129,7 +129,7 @@ const Modes = Module("modes", {
 
     NONE: 0,
 
-    __iterator__() { return util.Array.itervalues(this.all); },
+    *[Symbol.iterator]() { yield* this.all; },
 
     get all() { return this._mainModes.slice(); },
 

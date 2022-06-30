@@ -557,7 +557,7 @@ const Mappings = Module("mappings", {
 
         addMapCommands("",  [modes.NORMAL, modes.VISUAL], "");
 
-        for (let mode in modes.mainModes)
+        for (const mode of modes.mainModes)
             if (mode.char && !commands.get(mode.char + "map"))
                 addMapCommands(
                     mode.char,
@@ -596,7 +596,7 @@ const Mappings = Module("mappings", {
         };
     },
     modes() {
-        for (let mode in modes) {
+        for (const mode of modes) {
             this._main[mode] = [];
             this._user[mode] = [];
         }
