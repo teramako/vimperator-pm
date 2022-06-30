@@ -596,7 +596,7 @@ const Liberator = Module("liberator", {
         // XMLHttpRequest don't allow access to chrome documents.
         tagMap.all = "all";
         let files = findHelpFile("all").map(function (doc) {
-            return Array.from(iter(util.evaluateXPath("//liberator:include/@href", doc)))
+            return Array.from(util.evaluateXPath("//liberator:include/@href", doc))
                         .map(f => f.value);
         });
 
