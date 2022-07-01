@@ -69,7 +69,7 @@ const Bookmarks = Module("bookmarks", {
                                      .map(k => Keyword(k.keyword, k.title, k.icon, k.url));
             });
 
-            this.__iterator__ = () => iter(self.bookmarks);
+            this[Symbol.iterator] = function* () { yield* self.bookmarks; }
 
             function loadBookmark(node) {
                 if (node.uri == null) // How does this happen?
@@ -221,7 +221,7 @@ const Bookmarks = Module("bookmarks", {
         try {
             let uri = util.createURI(url);
             if (!force) {
-                for (let bmark in this._cache) {
+                for (let bmark of this._cache) {
                     if (bmark[0] == uri.spec) {
                         var id = bmark[5];
                         if (title)

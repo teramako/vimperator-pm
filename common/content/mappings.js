@@ -195,15 +195,19 @@ const Mappings = Module("mappings", {
     _expandLeader(keyString) { return keyString.replace(/<Leader>/gi, mappings.getMapLeader()); },
 
     // Return all mappings present in all @modes
-    _mappingsIterator(modes, stack) {
+    *_mappingsIterator(modes, stack) {
         modes = modes.slice();
-        return iter(stack[modes.shift()].filter(map =>
-            modes.every(mode => stack[mode].some(m => map.equals(m)))));
+        for (const map of stack[modes.shift()]) {
+            if (modes.every(mode => stack[mode].some(m => map.equals(m))))
+                yield map;
+        }
     },
 
     // NOTE: just normal mode for now
     /** @property {Iterator(Map)} @private */
-    __iterator__() { return this._mappingsIterator([modes.NORMAL], this._main); },
+    *[Symbol.iterator]() {
+        yield* this._mappingsIterator([modes.NORMAL], this._main);
+    },
 
     // used by :mkvimperatorrc to save mappings
     /**
