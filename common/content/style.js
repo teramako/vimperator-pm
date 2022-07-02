@@ -242,7 +242,9 @@ function Highlights(name, store) {
         return Object.keys(highlight).sort();
     }
 
-    this.__iterator__ = function () { return iter(keys().map(v => highlight[v])); };
+    this[Symbol.iterator] = function* () {
+        yield* Object.keys(highlight).sort().map(k => highlight[k]);
+    }
 
     this.get = function (k) { return highlight[k]; };
     this.set = function (key, newStyle, force, append) {
@@ -387,7 +389,7 @@ function Styles(name, store) {
 
     let id = 0;
 
-    this.__iterator__ = function () { return Iterator(userSheets.concat(systemSheets)); };
+    this[Symbol.iterator] = function* () { yield* userSheets.concat(systemSheets); };
     this.__defineGetter__("systemSheets", function () { return Iterator(systemSheets); });
     this.__defineGetter__("userSheets", function () { return Iterator(userSheets); });
     this.__defineGetter__("systemNames", function () { return Iterator(systemNames); });
@@ -770,7 +772,7 @@ Module("highlight", {
                     // List matching keys
                     let str = template.tabular(["Key", { header: "Sample", style: "text-align: center" }, "CSS"],
                         iter(
-                            Array.from(iter(highlight))
+                            Array.from(highlight)
                                  .filter(h => !key || h.class.indexOf(key) > -1)
                                  .map(h => [
                                     h.class,
@@ -799,8 +801,7 @@ Module("highlight", {
                         args.completeArg = args.completeArg > 1 ? -1 : 0;
 
                     if (args.completeArg == 0)
-                        context.completions = Array.from(iter(highlight))
-                                                   .map(v => [v.class, v.value]);
+                        context.completions = Array.from(highlight, v => [v.class, v.value]);
                     else if (args.completeArg == 1) {
                         let hl = highlight.get(args[0]);
                         if (hl)
@@ -811,7 +812,7 @@ Module("highlight", {
                 literal: 1,
                 options: [[["-append", "-a"], commands.OPTION_NOARG]],
                 serial: function () {
-                    return Array.from(iter(highlight))
+                    return Array.from(highlight)
                                 .filter(v => v.value != v.default)
                                 .map(v => ({
                                     command: this.name,
@@ -832,7 +833,7 @@ Module("highlight", {
 
         completion.highlightGroup = function highlightGroup(context) {
             context.title = ["Highlight Group", "Value"];
-            context.completions = Array.from(iter(highlight)).map(v => [v.class, v.value]);
+            context.completions = Array.from(highlight).map(v => [v.class, v.value]);
         };
     }
 });
