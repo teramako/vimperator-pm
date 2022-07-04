@@ -1068,7 +1068,7 @@ const Options = Module("options", {
 
             if (context.filter.indexOf("=") == -1) {
                 if (prefix)
-                    context.filters.push(({ item: opt }) => opt.type == "boolean" || prefix == "inv" && opt.values instanceof Array);
+                    context.filters.push(({ item: opt }) => opt.type == "boolean" || prefix == "inv" && Array.isArray(opt.values));
                 return completion.option(context, opt.scope);
             }
             else if (prefix == "no")

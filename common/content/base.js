@@ -118,7 +118,7 @@ function isobject(obj) {
  * is not the case when using (obj instanceof Array).
  */
 function isarray(val) {
-    return Object.prototype.toString.call(val) == "[object Array]";
+    return Array.isArray(val);
 }
 
 /**
