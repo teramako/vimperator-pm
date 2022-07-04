@@ -1748,9 +1748,9 @@ const Liberator = Module("liberator", {
             "List all commands, mappings and options with a short description",
             function (args) {
                 let usage = {
-                    mappings() { return template.table2(xml, "Mappings", Array.from(iter(mappings)).map(item => [item.name || item.names[0], item.description]).sort()); },
-                    commands() { return template.table2(xml, "Commands", Array.from(iter(commands)).map(item => [item.name || item.names[0], item.description])); },
-                    options()  { return template.table2(xml, "Options",  Array.from(iter(options)).map(item => [item.name || item.names[0], item.description])); }
+                    mappings() { return template.table2(xml, "Mappings", Array.from(mappings, item => [item.name || item.names[0], item.description]).sort()); },
+                    commands() { return template.table2(xml, "Commands", Array.from(commands, item => [item.name || item.names[0], item.description])); },
+                    options()  { return template.table2(xml, "Options",  Array.from(options,  item => [item.name || item.names[0], item.description])); }
                 }
 
                 if (args[0] && !usage[args[0]])

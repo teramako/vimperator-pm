@@ -237,7 +237,7 @@ const Events = Module("events", {
             return this._macros;
 
         let re = RegExp(filter);
-        return iter(Array.from(this._macros).filter(([macro, keys]) => re.test(macro)));
+        return Array.from(this._macros).filter(([macro, ]) => re.test(macro));
     },
 
     /**

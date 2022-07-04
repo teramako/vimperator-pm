@@ -512,8 +512,7 @@ const Bookmarks = Module("bookmarks", {
             "Show jumplist",
             function () {
                 let sh = history.session;
-                let jumps = Array.from(iter(sh))
-                                 .map(([idx, val]) => [
+                let jumps = Array.from(sh, (val, idx) => [
                                      idx == sh.index ? ">" : "",
                                      Math.abs(idx - sh.index),
                                      val.title,

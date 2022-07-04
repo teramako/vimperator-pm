@@ -349,7 +349,7 @@ const Util = Module("util", {
             addDataEntry(file + ".xhtml", data.join(""));
         }
 
-        let data = Array.from(iter(highlight))
+        let data = Array.from(highlight)
                         .filter(h => /^Help|^Logo/.test(h.class))
                         .map(h =>
                             h.selector.replace(/^\[.*?=(.*?)\]/, ".hl-$1").replace(/html\|/, "") +

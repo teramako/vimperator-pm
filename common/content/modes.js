@@ -134,9 +134,9 @@ const Modes = Module("modes", {
     get all() { return this._mainModes.slice(); },
 
     get mainModes() {
-        return iter(Object.keys(modes._modeMap)
-                          .filter(k => !modes._modeMap[k].extended && modes._modeMap[k].name == k)
-                          .map(k => modes._modeMap[k]));
+        return Object.keys(modes._modeMap)
+                     .filter(k => !modes._modeMap[k].extended && modes._modeMap[k].name == k)
+                     .map(k => modes._modeMap[k]);
     },
 
     get mainMode() { return this._modeMap[this._main]; },

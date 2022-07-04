@@ -897,7 +897,7 @@ lookup:
                 liberator.assert(!file.exists() || args.bang,
                     "File exists: " + filename + ". Add ! to override.");
 
-                let lines = Array.from(iter(commands))
+                let lines = Array.from(commands)
                                  .filter(cmd => cmd.serial)
                                  .map(cmd => cmd.serial().map(commands.commandToString))
                                  .flat();
@@ -939,7 +939,7 @@ lookup:
             "List all sourced script names",
             function () {
                 let list = template.tabular([{ header: "<SNR>", style: "text-align: right; padding-right: 1em;" }, "Filename"],
-                    iter(io._scriptNames.map((file, i) => [i + 1, file])));
+                    io._scriptNames.map((file, i) => [i + 1, file]));
 
                 commandline.echo(list, commandline.HL_NORMAL, commandline.FORCE_MULTILINE);
             },

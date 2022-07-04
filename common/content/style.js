@@ -594,9 +594,9 @@ Module("styles", {
 
                 if (!css) {
                     let list = Array.concat(Array.from(styles.userNames),
-                                            Array.from(styles.userSheets).filter(i => !i[1].name));
+                                            Array.from(styles.userSheets).filter(([, sheet]) => !sheet.name));
                     let str = template.tabular([{ header: "", style: "min-width: 1em; text-align: center; font-weight: bold;", highlight: "Disabled" }, "Name", "Filter", "CSS"],
-                        iter(list.filter(([key, sheet]) =>
+                        list.filter(([,sheet]) =>
                                      (!filter || sheet.sites.indexOf(filter) >= 0) &&
                                      (!name || sheet.name == name))
                                  .map(([key, sheet]) => [
@@ -605,7 +605,6 @@ Module("styles", {
                                      sheet.sites.join(","),
                                      sheet.css
                                  ])
-                        )
                     );
 
                     commandline.echo(str, commandline.HL_NORMAL, commandline.FORCE_MULTILINE);

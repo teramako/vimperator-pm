@@ -956,7 +956,7 @@ const Commands = Module("commands", {
     },
 
     completion() {
-        JavaScript.setCompleter(this.get, [() => iter(Array.from(commands, c => [c.name, c.description]))]);
+        JavaScript.setCompleter(this.get, [() => Array.from(commands, c => [c.name, c.description])]);
 
         completion.command = function command(context, subCmds) {
             context.keys = { text: "longNames", description: "description" };
@@ -1121,14 +1121,14 @@ const Commands = Module("commands", {
 
                     if (cmds.length > 0) {
                         let str = template.tabular(["", "Name", "Args", "Range", "Complete", "Definition"],
-                            iter(cmds.map(cmd => [
+                            cmds.map(cmd => [
                                 cmd.bang ? "!" : " ",
                                 cmd.name,
                                 cmd.argCount,
                                 cmd.count ? "0c" : "",
                                 completerToString(cmd.completer),
                                 cmd.replacementText || "function () { ... }"
-                            ]))
+                            ])
                         );
 
                         commandline.echo(str, commandline.HL_NORMAL, commandline.FORCE_MULTILINE);
