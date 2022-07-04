@@ -20,7 +20,7 @@ const IgnoreKeys = Module("ignoreKeys", {
 
     get(filter) {
         let filtered = [];
-        for (let [page, exceptions] in this._ignoredKeys) {
+        for (const [page, exceptions] of this._ignoredKeys) {
             if (!filter || page.indexOf(filter) >= 0)
                 filtered.push([page, exceptions]);
         }
@@ -29,7 +29,7 @@ const IgnoreKeys = Module("ignoreKeys", {
     },
 
     hasIgnoredKeys(url) {
-        for (let [page, exceptions] in this._ignoredKeys) {
+        for (const [page, exceptions] of this._ignoredKeys) {
             let re = RegExp(page);
             if (re.test(url))
                 return exceptions;

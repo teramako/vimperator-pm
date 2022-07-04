@@ -410,9 +410,10 @@ const StructBase = Class("StructBase", {
     clone () { return this.constructor.apply(null, this.slice()); },
 
     // Iterator over our named members
-    __iterator__ () {
-        let self = this;
-        return iter(Object.keys(self.members).map(i => [self.members[i], self[i]]));
+    *[Symbol.iterator]() {
+        for (const key of this.members) {
+            yield [key, this[key]];
+        }
     }
 }, {
     /**

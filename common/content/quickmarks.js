@@ -38,7 +38,7 @@ const QuickMarks = Module("quickmarks", {
     remove(filter) {
         let pattern = RegExp("[" + filter.replace(/\s+/g, "") + "]");
 
-        for (let [qmark, ] in this._qmarks) {
+        for (let [qmark, ] of this._qmarks) {
             if (pattern.test(qmark))
                 this._qmarks.remove(qmark);
         }
@@ -75,7 +75,7 @@ const QuickMarks = Module("quickmarks", {
      */
     // FIXME: filter should match that of quickmarks.remove or vice versa
     list(filter) {
-        let marks = Array.from(iter(this._qmarks)).map(([k, v]) => k);
+        let marks = Array.from(this._qmarks, ([k, v]) => k);
         let lowercaseMarks = marks.filter(x => /[a-z]/.test(x)).sort();
         let uppercaseMarks = marks.filter(x => /[A-Z]/.test(x)).sort();
         let numberMarks    = marks.filter(x => /[0-9]/.test(x)).sort();
