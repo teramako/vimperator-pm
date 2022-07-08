@@ -629,7 +629,7 @@ const CompletionContext = Class("CompletionContext", {
         }
         //for (let key in (k for ([k, v] in Iterator(self.contexts)) if (v.offset > this.caret)))
         //    delete this.contexts[key];
-        for (let [, context] in Iterator(this.contexts)) {
+        for (const context of Object.values(this.contexts)) {
             context.hasItems = false;
             if (context != context.top)
                 context.incomplete = false;
@@ -660,9 +660,9 @@ const CompletionContext = Class("CompletionContext", {
     Filter: {
         text(item) {
             let text = Array.concat(item.text);
-            for (let [i, str] in Iterator(text)) {
+            for (const str of text) {
                 if (this.match(String(str))) {
-                    item.text = String(text[i]);
+                    item.text = String(str);
                     return true;
                 }
             }
