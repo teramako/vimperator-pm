@@ -558,31 +558,23 @@ const Util = Module("util", {
 
         let keys = [];
         try { // window.content often does not want to be queried with "var i in object"
-            let hasValue = !("__iterator__" in object);
-            if (modules.isPrototypeOf(object)) {
-                object = Iterator(object);
-                hasValue = false;
-            }
-            for (let i in object) {
-                let value = xml`<![CDATA[<no value>]]>`;
-                try {
-                    value = object[i];
-                }
-                catch (e) {}
-                if (!hasValue) {
-                    if (i instanceof Array && i.length === 2)
-                        [i, value] = i;
-                    else
-                        var noVal = true;
-                }
+            let hasLegacyIterator = ("__iterator__" in object),
+                hasIterator = (Symbol.iterator in object);
 
+            if (hasLegacyIterator) {
+                object = Iterator(object);
+                hasIterator = true;
+                hasLegacyIterator = false;
+            }
+            const iter = hasIterator ? Array.from(object, (item, i) => [i, item]) : Object.entries(object);
+            for (let [keyItem, value] of iter) {
                 value = template.highlight(value, true, 150);
-                let key = xml`<span highlight="Key">${i}</span>`;
-                if (!isNaN(i))
-                    i = parseInt(i);
-                else if (/^[A-Z_]+$/.test(i))
-                    i = "";
-                keys.push([i, xml`${key}${noVal ? "" : xml`: ${value}`}<br/>&#xa;`]);
+                key = xml`<span highlight="Key">${keyItem}</span>`;
+                if (!isNaN(keyItem))
+                    keyItem = parseInt(keyItem);
+                else if (/^[A-Z_]+$/.test(keyItem))
+                    keyItem = "";
+                keys.push([keyItem, xml`${key}: ${value}<br/>&#xa;`]);
             }
         }
         catch (e) {}
