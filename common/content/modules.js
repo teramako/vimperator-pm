@@ -128,7 +128,7 @@ window.addEventListener("load", function onload() {
 
 window.addEventListener("unload", function onunload() {
     window.removeEventListener("unload", onunload, false);
-    for (let [, mod] in iter(modules))
+    for (const mod of Object.values(modules))
         if (mod instanceof ModuleBase && "destroy" in mod)
             mod.destroy();
 }, false);
