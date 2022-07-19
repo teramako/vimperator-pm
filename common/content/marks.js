@@ -216,10 +216,10 @@ const Marks = Module("marks", {
             this._urlMarks.remove(mark);
     },
 
-    _localMarkIter() {
-        return iter(Array.from(marks._localMarks)
+    *_localMarkIter() {
+        yield* Array.from(marks._localMarks)
                          .reduce((marks, [m, value]) =>
-                             marks.concat(value.map(val => [m, val])), []));
+                             marks.concat(value.map(val => [m, val])), []);
     }
 
 }, {
