@@ -110,7 +110,7 @@ const JavaScript = Module("javascript", {
 
         let completions;
         if (modules.isPrototypeOf(obj))
-            completions = toplevel ? Array.from(iter(obj)) : [];
+            completions = toplevel ? Array.from(this.iter(obj, true)) : [];
         else {
             completions = Array.from(this.iter(obj, toplevel));
             if (!toplevel)
