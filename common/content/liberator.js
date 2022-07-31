@@ -601,7 +601,7 @@ const Liberator = Module("liberator", {
         });
 
         // Scrape the tags from the rest of the help files.
-        util.Array.flatten(files).forEach(function (file) {
+        files.flat().forEach(function (file) {
             findHelpFile(file).forEach(function (doc) {
                 addTags(file, doc);
             });
@@ -1529,13 +1529,13 @@ const Liberator = Module("liberator", {
                 if (extensions.length > 0) {
                     let list = template.tabular(
                         ["Name", "Version", "Status", "Description"],
-                        util.Array.itervalues(extensions.map(e =>
+                        extensions.map(e =>
                             [template.icon(e, e.name),
                              e.version,
                              e.enabled ? xml`<span highlight="Enabled">enabled</span>`
                                        : xml`<span highlight="Disabled">disabled</span>`,
                              e.description]
-                        ))
+                        )
                     );
 
                     commandline.echo(list, commandline.HL_NORMAL, commandline.FORCE_MULTILINE);
@@ -1748,9 +1748,9 @@ const Liberator = Module("liberator", {
             "List all commands, mappings and options with a short description",
             function (args) {
                 let usage = {
-                    mappings() { return template.table2(xml, "Mappings", Array.from(iter(mappings)).map(item => [item.name || item.names[0], item.description]).sort()); },
-                    commands() { return template.table2(xml, "Commands", Array.from(iter(commands)).map(item => [item.name || item.names[0], item.description])); },
-                    options()  { return template.table2(xml, "Options",  Array.from(iter(options)).map(item => [item.name || item.names[0], item.description])); }
+                    mappings() { return template.table2(xml, "Mappings", Array.from(mappings, item => [item.name || item.names[0], item.description]).sort()); },
+                    commands() { return template.table2(xml, "Commands", Array.from(commands, item => [item.name || item.names[0], item.description])); },
+                    options()  { return template.table2(xml, "Options",  Array.from(options,  item => [item.name || item.names[0], item.description])); }
                 }
 
                 if (args[0] && !usage[args[0]])

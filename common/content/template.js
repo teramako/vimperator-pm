@@ -15,11 +15,11 @@ const Template = Module("template", {
     },
     map2(tag, iter, func, sep, interruptable) {
         if (iter.length) // FIXME: Kludge?
-            iter = util.Array.itervalues(iter);
+            iter = Array.from(iter);
         let ret = tag``;
         let n = 0;
         var op = tag["+="] || tag["+"] || ((lhs, rhs) => tag`${lhs}${rhs}`);
-        for (let i of Iterator(iter)) {
+        for (let i of iter) {
             let val = func(i);
             if (val == undefined || (tag.isEmpty && tag.isEmpty(val)))
                 continue;

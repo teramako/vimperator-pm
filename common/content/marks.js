@@ -31,7 +31,7 @@ const Marks = Module("marks", {
         // URL marks
         // FIXME: why does umarks.sort() cause a "Component is not available =
         // NS_ERROR_NOT_AVAILABLE" exception when used here?
-        let umarks = Array.from(iter(this._urlMarks));
+        let umarks = Array.from(this._urlMarks);
         umarks.sort((a, b) => a[0].localeCompare(b[0]));
 
         return lmarks.concat(umarks);
@@ -90,16 +90,16 @@ const Marks = Module("marks", {
     remove(filter) {
         if (!filter) {
             // :delmarks! only deletes a-z marks
-            for (let [mark, ] in this._localMarks)
+            for (let [mark, ] of this._localMarks)
                 this._removeLocalMark(mark);
         }
         else {
             let pattern = RegExp("[" + filter.replace(/\s+/g, "") + "]");
-            for (let [mark, ] in this._urlMarks) {
+            for (let [mark, ] of this._urlMarks) {
                 if (pattern.test(mark))
                     this._removeURLMark(mark);
             }
-            for (let [mark, ] in this._localMarks) {
+            for (let [mark, ] of this._localMarks) {
                 if (pattern.test(mark))
                     this._removeLocalMark(mark);
             }
@@ -216,10 +216,10 @@ const Marks = Module("marks", {
             this._urlMarks.remove(mark);
     },
 
-    _localMarkIter() {
-        return iter(Array.from(iter(marks._localMarks))
+    *_localMarkIter() {
+        yield* Array.from(marks._localMarks)
                          .reduce((marks, [m, value]) =>
-                             marks.concat(value.map(val => [m, val])), []));
+                             marks.concat(value.map(val => [m, val])), []);
     }
 
 }, {

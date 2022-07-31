@@ -217,7 +217,7 @@ function ObjectStore(name, store, load, options) {
         object = {};
     };
 
-    this.__iterator__ = function () { return Iterator(object); };
+    this[Symbol.iterator] = function* () { yield* Object.entries(object); }
 }
 ObjectStore.prototype = prototype;
 
@@ -283,7 +283,7 @@ function ArrayStore(name, store, load, options) {
         return index >= 0 ? array[index] : array[array.length + index];
     };
 
-    this.__iterator__ = function () { return Iterator(array); };
+    this[Symbol.iterator] = function* () { yield* Object.entries(array); }
 }
 ArrayStore.prototype = prototype;
 

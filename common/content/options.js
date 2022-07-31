@@ -41,9 +41,7 @@ const Option = Class("Option", {
 
         // add no{option} variant of boolean {option} to this.names
         if (this.type == "boolean") {
-            this.names = array(Object.keys(names)
-                .map(k => [names[k], "no" + names[k]]))
-                .flatten().__proto__;
+            this.names = names.map(name => [name, "no" + name]).flat();
         }
 
         if (this.globalValue == undefined)
@@ -262,11 +260,11 @@ const Option = Class("Option", {
             values = Array.concat(values);
             switch (operator) {
             case "+":
-                newValue = util.Array.uniq(Array.concat(this.values, values), true);
+                newValue = [...new Set(Array.concat(this.values, values))];
                 break;
             case "^":
                 // NOTE: Vim doesn't prepend if there's a match in the current value
-                newValue = util.Array.uniq(Array.concat(values, this.values), true);
+                newValue = [...new Set(Array.concat(values, this.values))];
                 break;
             case "-":
                 newValue = this.values.filter(item => values.indexOf(item) == -1);
@@ -479,12 +477,12 @@ const Options = Module("options", {
     },
 
     /** @property {Iterator(Option)} @private */
-    __iterator__() {
-        let sorted = Object.keys(this._optionHash)
+    *[Symbol.iterator]() {
+        const sorted = Object.keys(this._optionHash)
             .map(i => this._optionHash[i])
             .sort((a, b) => String.localeCompare(a.name, b.name));
 
-        return iter(sorted);
+        yield* sorted;
     },
 
     /** @property {Object} Observes preference value changes. */
@@ -577,7 +575,7 @@ const Options = Module("options", {
         if (name in this._optionHash)
             return (this._optionHash[name].scope & scope) && this._optionHash[name];
 
-        for (let opt in options) {
+        for (const opt of options) {
             if (opt.hasName(name))
                 return (opt.scope & scope) && opt;
         }
@@ -598,8 +596,8 @@ const Options = Module("options", {
         if (!scope)
             scope = Option.SCOPE_BOTH;
 
-        function opts(opt) {
-            for (let opt in options) {
+        function opts() {
+            for (const opt of options) {
                 let option = {
                     isDefault: opt.value == opt.defaultValue,
                     name:      opt.name,
@@ -993,7 +991,7 @@ const Options = Module("options", {
                 // reset a variable to its default value
                 if (opt.reset) {
                     if (opt.all) {
-                        for (let option in options)
+                        for (const option of options)
                             option.reset();
                     }
                     else {
@@ -1070,7 +1068,7 @@ const Options = Module("options", {
 
             if (context.filter.indexOf("=") == -1) {
                 if (prefix)
-                    context.filters.push(({ item: opt }) => opt.type == "boolean" || prefix == "inv" && opt.values instanceof Array);
+                    context.filters.push(({ item: opt }) => opt.type == "boolean" || prefix == "inv" && Array.isArray(opt.values));
                 return completion.option(context, opt.scope);
             }
             else if (prefix == "no")
@@ -1222,7 +1220,7 @@ const Options = Module("options", {
                     return setCompleter(context, args);
                 },
                 serial() {
-                    return Array.from(iter(options))
+                    return Array.from(options)
                         .filter(opt => !opt.getter && opt.value != opt.defaultValue && (opt.scope & Option.SCOPE_GLOBAL))
                         .map(opt => ({
                             command: this.name,
@@ -1252,7 +1250,7 @@ const Options = Module("options", {
             });
     },
     completion() {
-        JavaScript.setCompleter(this.get, [() => iter(Array.from(iter(options)).map(o => [o.name, o.description]))]);
+        JavaScript.setCompleter(this.get, [() => Array.from(options, o => [o.name, o.description])]);
         JavaScript.setCompleter([this.getPref, this.safeSetPref, this.setPref, this.resetPref, this.invertPref],
                 [() => options.allPrefs().map(pref => [pref, ""])]);
 

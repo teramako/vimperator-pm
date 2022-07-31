@@ -237,7 +237,7 @@ const Events = Module("events", {
             return this._macros;
 
         let re = RegExp(filter);
-        return iter(Array.from(iter(this._macros)).filter(([macro, keys]) => re.test(macro)));
+        return Array.from(this._macros).filter(([macro, ]) => re.test(macro));
     },
 
     /**
@@ -250,7 +250,7 @@ const Events = Module("events", {
     deleteMacros(filter) {
         let re = RegExp("[" + filter.replace(/\s+/g, "") + "]");
 
-        for (let [item, ] in this._macros) {
+        for (let [item, ] of this._macros) {
             if (re.test(item))
                 this._macros.remove(item);
         }

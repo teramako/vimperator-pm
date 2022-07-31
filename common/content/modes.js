@@ -129,14 +129,14 @@ const Modes = Module("modes", {
 
     NONE: 0,
 
-    __iterator__() { return util.Array.itervalues(this.all); },
+    *[Symbol.iterator]() { yield* this.all; },
 
     get all() { return this._mainModes.slice(); },
 
     get mainModes() {
-        return iter(Object.keys(modes._modeMap)
-                          .filter(k => !modes._modeMap[k].extended && modes._modeMap[k].name == k)
-                          .map(k => modes._modeMap[k]));
+        return Object.keys(modes._modeMap)
+                     .filter(k => !modes._modeMap[k].extended && modes._modeMap[k].name == k)
+                     .map(k => modes._modeMap[k]);
     },
 
     get mainMode() { return this._modeMap[this._main]; },
@@ -174,7 +174,7 @@ const Modes = Module("modes", {
     matchModes(obj) {
         return Object.keys(this._modeMap)
                      .map(k => this._modeMap[k])
-                     .filter(m => array(keys(obj)).every(k => obj[k] == (m[k] || false)));
+                     .filter(m => Object.keys(obj).every(k => obj[k] == (m[k] || false)));
     },
 
     // show the current mode string in the command line

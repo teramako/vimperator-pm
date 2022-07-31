@@ -227,7 +227,7 @@ const CompletionContext = Class("CompletionContext", {
                     __proto__: item
                 }));
             });
-            return { start: minStart, items: util.Array.flatten(items),
+            return { start: minStart, items: items.flat(),
                 get longestSubstring() {
                     var value = this.longestAllSubstring;
                     Object.defineProperty(this, "longestSubstring", { value: value});
@@ -252,7 +252,7 @@ const CompletionContext = Class("CompletionContext", {
         let substrings = lists.reduce((res, list) => res.filter(str => list.some(s => s.substring(0, str.length) == str)), lists.pop());
         if (!substrings) // FIXME: How is this undefined?
             return [];
-        return util.Array.uniq(Array.slice(substrings));
+        return [...new Set(Array.slice(substrings))];
     },
     // Temporary
     get longestAllSubstring() {
@@ -268,8 +268,8 @@ const CompletionContext = Class("CompletionContext", {
     get completions() { return this._completions || []; },
     set completions(items) {
         // Accept a generator
-        if ({}.toString.call(items) != '[object Array]') {
-            items = Array.from(iter(items));
+        if (!Array.isArray(items)) {
+            items = Array.from(items);
         }
         delete this.cache.filtered;
         delete this.cache.filter;
@@ -629,7 +629,7 @@ const CompletionContext = Class("CompletionContext", {
         }
         //for (let key in (k for ([k, v] in Iterator(self.contexts)) if (v.offset > this.caret)))
         //    delete this.contexts[key];
-        for (let [, context] in Iterator(this.contexts)) {
+        for (const context of Object.values(this.contexts)) {
             context.hasItems = false;
             if (context != context.top)
                 context.incomplete = false;
@@ -660,9 +660,9 @@ const CompletionContext = Class("CompletionContext", {
     Filter: {
         text(item) {
             let text = Array.concat(item.text);
-            for (let [i, str] in Iterator(text)) {
+            for (const str of text) {
                 if (this.match(String(str))) {
-                    item.text = String(text[i]);
+                    item.text = String(str);
                     return true;
                 }
             }

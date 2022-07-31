@@ -69,7 +69,7 @@ const Bookmarks = Module("bookmarks", {
                                      .map(k => Keyword(k.keyword, k.title, k.icon, k.url));
             });
 
-            this.__iterator__ = () => iter(self.bookmarks);
+            this[Symbol.iterator] = function* () { yield* self.bookmarks; }
 
             function loadBookmark(node) {
                 if (node.uri == null) // How does this happen?
@@ -221,7 +221,7 @@ const Bookmarks = Module("bookmarks", {
         try {
             let uri = util.createURI(url);
             if (!force) {
-                for (let bmark in this._cache) {
+                for (let bmark of this._cache) {
                     if (bmark[0] == uri.spec) {
                         var id = bmark[5];
                         if (title)
@@ -512,8 +512,7 @@ const Bookmarks = Module("bookmarks", {
             "Show jumplist",
             function () {
                 let sh = history.session;
-                let jumps = Array.from(iter(sh))
-                                 .map(([idx, val]) => [
+                let jumps = Array.from(sh, (val, idx) => [
                                      idx == sh.index ? ">" : "",
                                      Math.abs(idx - sh.index),
                                      val.title,
@@ -537,9 +536,7 @@ const Bookmarks = Module("bookmarks", {
             args.completeFilter = have.pop();
 
             let prefix = filter.substr(0, filter.length - args.completeFilter.length);
-            let tags = util.Array.uniq(
-                util.Array.flatten(bookmarks._cache.bookmarks.map(b => b.tags))
-            );
+            const tags = [...new Set(bookmarks._cache.bookmarks.map(b => b.tags).flat())];
 
             return tags.filter(tag => have.indexOf(tag) < 0)
                        .map(tag => [prefix + tag, tag]);
@@ -554,9 +551,7 @@ const Bookmarks = Module("bookmarks", {
         }
 
         function keyword(context, args) {
-            let keywords = util.Array.uniq(
-                util.Array.flatten(bookmarks._cache.keywords.map(b => b.keyword))
-            );
+            const keywords = [...new Set(bookmarks._cache.bookmarks.filter(b => !!b.keyword).map(b => b.keyword))];
             return keywords.map(kw => [kw, kw]);
         }
 

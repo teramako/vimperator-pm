@@ -897,10 +897,10 @@ lookup:
                 liberator.assert(!file.exists() || args.bang,
                     "File exists: " + filename + ". Add ! to override.");
 
-                let lines = Array.from(iter(commands))
+                let lines = Array.from(commands)
                                  .filter(cmd => cmd.serial)
-                                 .map(cmd => cmd.serial().map(commands.commandToString));
-                lines = util.Array.flatten(lines);
+                                 .map(cmd => cmd.serial().map(commands.commandToString))
+                                 .flat();
 
                 // source a user .vimperatorrc file
                 lines.unshift('"' + liberator.version + "\n");
@@ -939,7 +939,7 @@ lookup:
             "List all sourced script names",
             function () {
                 let list = template.tabular([{ header: "<SNR>", style: "text-align: right; padding-right: 1em;" }, "Filename"],
-                    iter(io._scriptNames.map((file, i) => [i + 1, file])));
+                    io._scriptNames.map((file, i) => [i + 1, file]));
 
                 commandline.echo(list, commandline.HL_NORMAL, commandline.FORCE_MULTILINE);
             },
@@ -1001,7 +1001,7 @@ lookup:
             context.generate = function () {
                 let {CharsetMenu} = Cu.import("resource://gre/modules/CharsetMenu.jsm", {});
                 let data = CharsetMenu.getData();
-                return data.pinnedCharsets.concat(data.otherCharsets).map(function (o) [o.value, o.label]);
+                return data.pinnedCharsets.concat(data.otherCharsets).map(o => [o.value, o.label]);
             };
         };
 
@@ -1079,7 +1079,7 @@ lookup:
                     }
                 }
 
-                return util.Array.flatten(commands);
+                return commands.flat();
             };
         };
 

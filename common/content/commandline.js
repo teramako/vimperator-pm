@@ -1617,7 +1617,7 @@ const CommandLine = Module("commandline", {
             "Items which are completed at the :open prompts",
             "charlist", typeof(config.defaults.complete) == "string" ? config.defaults.complete : "sl",
             {
-                completer(context) { return array(values(completion.urlCompleters)); }
+                completer(context) { return Object.values(completion.urlCompleters); }
             });
 
         options.add(["history", "hi"],
@@ -1850,7 +1850,7 @@ const ItemList = Class("ItemList", {
 
             for (let [i, row] of context.getRows(start, end, this._doc))
                 nodes[i] = row;
-            for (let [i, row] of util.Array.iteritems(nodes)) {
+            for (let [i, row] of Array.from(nodes).entries()) {
                 if (!row)
                     continue;
                 let display = (i >= start && i < end);

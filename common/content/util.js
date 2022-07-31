@@ -172,12 +172,12 @@ const Util = Module("util", {
      * tests. An expression is built with node tests for both the null and
      * XHTML namespaces. See {@link Buffer#evaluateXPath}.
      *
-     * @param nodes {Array(string)}
+     * @param nodes {string[]}
      * @returns {string}
      */
     makeXPath(nodes) {
-        return util.Array(nodes).map(function (node) { return [node, "xhtml:" + node]; }).flatten()
-                                .map(function (node) { return "//" + node; }).join(" | ");
+        return Array.from(nodes, node => [node, "xhtml:" + node]).flat()
+                    .map(node => "//" + node).join(" | ");
     },
 
     /**
@@ -286,9 +286,8 @@ const Util = Module("util", {
         function addDataEntry(file, data) // Inideal to an extreme.
             addURIEntry(file, "data:text/plain;charset=UTF-8," + encodeURI(data))
 
-        let empty = util.Array.toObject(
-            "area base basefont br col frame hr img input isindex link meta param"
-            .split(" ").map(Array.concat));
+        const empty = "area base basefont br col frame hr img input isindex link meta param"
+            .split(" ").reduce((obj, v, i) => { obj[v] = i; return obj; }, {});
 
         let chrome = {};
         for (let [file,] in Iterator(services.get("liberator:").FILE_MAP)) {
@@ -309,7 +308,7 @@ const Util = Module("util", {
                         if (node instanceof HTMLHtmlElement)
                             data.push(" xmlns=" + JSON.stringify(XHTML.uri));
 
-                        for (let { name: name, value: value } in util.Array.itervalues(node.attributes)) {
+                        for (let { name, value } of node.attributes) {
                             if (name === "liberator:highlight") {
                                 name = "class";
                                 value = "hl-" + value;
@@ -350,7 +349,7 @@ const Util = Module("util", {
             addDataEntry(file + ".xhtml", data.join(""));
         }
 
-        let data = Array.from(iter(highlight))
+        let data = Array.from(highlight)
                         .filter(h => /^Help|^Logo/.test(h.class))
                         .map(h =>
                             h.selector.replace(/^\[.*?=(.*?)\]/, ".hl-$1").replace(/html\|/, "") +
@@ -524,11 +523,7 @@ const Util = Module("util", {
         if (typeof object != "object")
             return false;
 
-        const NAMESPACES = util.Array.toObject([
-            [NS, 'liberator'],
-            [XHTML, 'html'],
-            [XUL, 'xul']
-        ]);
+        const NAMESPACES = [NS,XHTML,XUL].reduce((obj, ns)=>{ obj[ns.uri]=ns.prefix; return obj; }, {});
         if (object instanceof Element) {
             let elem = object;
             if (elem.nodeType === elem.TEXT_NODE)
@@ -563,31 +558,23 @@ const Util = Module("util", {
 
         let keys = [];
         try { // window.content often does not want to be queried with "var i in object"
-            let hasValue = !("__iterator__" in object);
-            if (modules.isPrototypeOf(object)) {
-                object = Iterator(object);
-                hasValue = false;
-            }
-            for (let i in object) {
-                let value = xml`<![CDATA[<no value>]]>`;
-                try {
-                    value = object[i];
-                }
-                catch (e) {}
-                if (!hasValue) {
-                    if (i instanceof Array && i.length === 2)
-                        [i, value] = i;
-                    else
-                        var noVal = true;
-                }
+            let hasLegacyIterator = ("__iterator__" in object),
+                hasIterator = (Symbol.iterator in object);
 
+            if (hasLegacyIterator) {
+                object = Iterator(object);
+                hasIterator = true;
+                hasLegacyIterator = false;
+            }
+            const iter = hasIterator ? Array.from(object, (item, i) => [i, item]) : Object.entries(object);
+            for (let [keyItem, value] of iter) {
                 value = template.highlight(value, true, 150);
-                let key = xml`<span highlight="Key">${i}</span>`;
-                if (!isNaN(i))
-                    i = parseInt(i);
-                else if (/^[A-Z_]+$/.test(i))
-                    i = "";
-                keys.push([i, xml`${key}${noVal ? "" : xml`: ${value}`}<br/>&#xa;`]);
+                key = xml`<span highlight="Key">${keyItem}</span>`;
+                if (!isNaN(keyItem))
+                    keyItem = parseInt(keyItem);
+                else if (/^[A-Z_]+$/.test(keyItem))
+                    keyItem = "";
+                keys.push([keyItem, xml`${key}: ${value}<br/>&#xa;`]);
             }
         }
         catch (e) {}
@@ -832,104 +819,6 @@ const Util = Module("util", {
         encoder[method](node);
         return encoder.encodeToString();
     },
-}, {
-    // TODO: Why don't we just push all util.BuiltinType up into modules? --djk
-    /**
-     * Array utility methods.
-     */
-    Array: Class("Array", Array, {
-        init: function (ary) {
-            return {
-                __proto__: ary,
-                __iterator__: function () { return this.iteritems(); },
-                mapImpl: function (meth, args) {
-                    var res = util.Array[meth].apply(null, [this.__proto__].concat(args));
-
-                    if (util.Array.isinstance(res))
-                        return util.Array(res);
-                    return res;
-                },
-                toString: function () { return this.__proto__.toString(); },
-                concat: function () { return this.__proto__.concat.apply(this.__proto__, arguments); },
-                map: function () { return this.mapImpl("map", Array.slice(arguments)); },
-                flatten: function () { return this.mapImpl("flatten", arguments); }
-            };
-        }
-    }, {
-        isinstance(obj) {
-            return Object.prototype.toString.call(obj) === "[object Array]";
-        },
-
-        /**
-         * Converts an array to an object. As in lisp, an assoc is an
-         * array of key-value pairs, which maps directly to an object,
-         * as such:
-         *    [["a", "b"], ["c", "d"]] -> { a: "b", c: "d" }
-         *
-         * @param {Array[]} assoc
-         * @... {string} 0 - Key
-         * @...          1 - Value
-         */
-        toObject(assoc) {
-            let obj = {};
-            assoc.forEach(function ([k, v]) { obj[k] = v; });
-            return obj;
-        },
-
-        /**
-         * Compacts an array, removing all elements that are null or undefined:
-         *    ["foo", null, "bar", undefined] -> ["foo", "bar"]
-         *
-         * @param {Array} ary
-         * @returns {Array}
-         */
-        compact(ary) { return ary.filter(item => item != null); },
-
-        /**
-         * Flattens an array, such that all elements of the array are
-         * joined into a single array:
-         *    [["foo", ["bar"]], ["baz"], "quux"] -> ["foo", ["bar"], "baz", "quux"]
-         *
-         * @param {Array} ary
-         * @returns {Array}
-         */
-        flatten(ary) { return Array.prototype.concat.apply([], ary); },
-
-        /**
-         * Returns an Iterator for an array's values.
-         *
-         * @param {Array} ary
-         * @returns {Iterator(Object)}
-         */
-        itervalues: function itervalues(ary) {
-            let length = ary.length;
-            for (let i = 0; i < length; i++)
-                yield ary[i];
-        },
-
-        /**
-         * Returns an Iterator for an array's indices and values.
-         *
-         * @param {Array} ary
-         * @returns {Iterator<number, object>}
-         */
-        *iteritems(ary) {
-            const length = ary.length;
-            for (let i = 0; i < length; i++)
-                yield [i, ary[i]];
-        },
-
-        /**
-         * Filters out all duplicates from an array. If
-         * <b>unsorted</b> is false, the array is sorted before
-         * duplicates are removed.
-         *
-         * @param {Array} ary
-         * @param {boolean} unsorted
-         * @returns {Array}
-         */
-        uniq(ary, unsorted) { return [...new Set(unsorted ? ary : ary.sort())]; },
-    })
 });
 
 // vim: set fdm=marker sw=4 ts=4 et:

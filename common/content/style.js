@@ -242,7 +242,9 @@ function Highlights(name, store) {
         return Object.keys(highlight).sort();
     }
 
-    this.__iterator__ = function () { return iter(keys().map(v => highlight[v])); };
+    this[Symbol.iterator] = function* () {
+        yield* Object.keys(highlight).sort().map(k => highlight[k]);
+    }
 
     this.get = function (k) { return highlight[k]; };
     this.set = function (key, newStyle, force, append) {
@@ -387,7 +389,7 @@ function Styles(name, store) {
 
     let id = 0;
 
-    this.__iterator__ = function () { return Iterator(userSheets.concat(systemSheets)); };
+    this[Symbol.iterator] = function* () { yield* userSheets.concat(systemSheets); };
     this.__defineGetter__("systemSheets", function () { return Iterator(systemSheets); });
     this.__defineGetter__("userSheets", function () { return Iterator(userSheets); });
     this.__defineGetter__("systemNames", function () { return Iterator(systemNames); });
@@ -557,10 +559,9 @@ Module("styles", {
     requires: ["config", "liberator", "storage", "util"],
 
     init: function () {
-        let array = util.Array;
         update(Styles.prototype, {
             get sites() {
-                return array(Array.from(this.userSheets).map(([k, v]) => v.sites)).flatten().uniq().__proto__;
+                return [...new Set(Array.from(this.userSheets).map(([k, v]) => v.sites).flat())];
             },
             completeSite: function (context, content) {
                 context.anchored = false;
@@ -593,9 +594,9 @@ Module("styles", {
 
                 if (!css) {
                     let list = Array.concat(Array.from(styles.userNames),
-                                            Array.from(styles.userSheets).filter(i => !i[1].name));
+                                            Array.from(styles.userSheets).filter(([, sheet]) => !sheet.name));
                     let str = template.tabular([{ header: "", style: "min-width: 1em; text-align: center; font-weight: bold;", highlight: "Disabled" }, "Name", "Filter", "CSS"],
-                        iter(list.filter(([key, sheet]) =>
+                        list.filter(([,sheet]) =>
                                      (!filter || sheet.sites.indexOf(filter) >= 0) &&
                                      (!name || sheet.name == name))
                                  .map(([key, sheet]) => [
@@ -604,7 +605,6 @@ Module("styles", {
                                      sheet.sites.join(","),
                                      sheet.css
                                  ])
-                        )
                     );
 
                     commandline.echo(str, commandline.HL_NORMAL, commandline.FORCE_MULTILINE);
@@ -771,7 +771,7 @@ Module("highlight", {
                     // List matching keys
                     let str = template.tabular(["Key", { header: "Sample", style: "text-align: center" }, "CSS"],
                         iter(
-                            Array.from(iter(highlight))
+                            Array.from(highlight)
                                  .filter(h => !key || h.class.indexOf(key) > -1)
                                  .map(h => [
                                     h.class,
@@ -800,8 +800,7 @@ Module("highlight", {
                         args.completeArg = args.completeArg > 1 ? -1 : 0;
 
                     if (args.completeArg == 0)
-                        context.completions = Array.from(iter(highlight))
-                                                   .map(v => [v.class, v.value]);
+                        context.completions = Array.from(highlight, v => [v.class, v.value]);
                     else if (args.completeArg == 1) {
                         let hl = highlight.get(args[0]);
                         if (hl)
@@ -812,7 +811,7 @@ Module("highlight", {
                 literal: 1,
                 options: [[["-append", "-a"], commands.OPTION_NOARG]],
                 serial: function () {
-                    return Array.from(iter(highlight))
+                    return Array.from(highlight)
                                 .filter(v => v.value != v.default)
                                 .map(v => ({
                                     command: this.name,
@@ -826,16 +825,14 @@ Module("highlight", {
         completion.colorScheme = function colorScheme(context) {
             context.title = ["Color Scheme", "Runtime Path"];
             context.keys = { text(f) { return f.leafName.replace(/\.vimp$/, ""); }, description: ".parent.path" };
-            context.completions = util.Array.flatten(
-                io.getRuntimeDirectories("colors").map(
-                    dir => dir.readDirectory().filter(
-                        file => /\.vimp$/.test(file.leafName))))
-
+            context.completions = io.getRuntimeDirectories("colors")
+                .map(dir => dir.readDirectory().filter(file => /\.vimp$/.test(file.leafName)))
+                .flat();
         };
 
         completion.highlightGroup = function highlightGroup(context) {
             context.title = ["Highlight Group", "Value"];
-            context.completions = Array.from(iter(highlight)).map(v => [v.class, v.value]);
+            context.completions = Array.from(highlight).map(v => [v.class, v.value]);
         };
     }
 });

@@ -8,14 +8,6 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-function array(obj) {
-    if (isgenerator(obj))
-        obj = Array.from(obj);
-    else if (obj.length)
-        obj = Array.slice(obj);
-    return util.Array(obj);
-}
-
 function allkeys(obj) {
     for(; obj; obj = obj.__proto__)
         for (let prop of Object.getOwnPropertyNames(obj))
@@ -53,45 +45,6 @@ function dict(ary) {
     return obj;
 }
 
-function iter(obj) {
-    if (obj instanceof Ci.nsISimpleEnumerator)
-        return (function () {
-            while (obj.hasMoreElements())
-                yield obj.getNext();
-        })();
-    if (isinstance(obj, [Ci.nsIStringEnumerator, Ci.nsIUTF8StringEnumerator]))
-        return (function () {
-            while (obj.hasMore())
-                yield obj.getNext();
-        })();
-    if (isinstance(obj, Ci.nsIDOMNodeIterator))
-        return (function () {
-            try {
-                while (true)
-                    yield obj.nextNode();
-            }
-            catch (e) {}
-        })();
-    if (isinstance(obj, [HTMLCollection, NodeList]))
-        return (function* () {
-            for (node of obj) {
-              yield node;
-            }
-        })();
-    if ((typeof NamedNodeMap !== "undefined" && obj instanceof NamedNodeMap) ||
-        (typeof MozNamedAttrMap !== "undefined" && obj instanceof MozNamedAttrMap))
-        return (function () {
-            for (let i = 0, len = obj.length; i < len; ++i)
-                yield [obj[i].name, obj[i]];
-        })();
-    if (obj instanceof Array)
-        return (function () {
-            for (value of obj)
-                yield value;
-        })();
-    return Iterator(obj);
-}
-
 function issubclass(targ, src) {
     return src === targ ||
         targ && typeof targ === "function" && targ.prototype instanceof src;
@@ -126,7 +79,7 @@ function isobject(obj) {
  * is not the case when using (obj instanceof Array).
  */
 function isarray(val) {
-    return Object.prototype.toString.call(val) == "[object Array]";
+    return Array.isArray(val);
 }
 
 /**
@@ -418,9 +371,10 @@ const StructBase = Class("StructBase", {
     clone () { return this.constructor.apply(null, this.slice()); },
 
     // Iterator over our named members
-    __iterator__ () {
-        let self = this;
-        return iter(Object.keys(self.members).map(i => [self.members[i], self[i]]));
+    *[Symbol.iterator]() {
+        for (const key of this.members) {
+            yield [key, this[key]];
+        }
     }
 }, {
     /**

@@ -129,24 +129,7 @@ const Abbreviations = Module("abbreviations", {
      * The list of the abbreviations merged from each modes.
      */
     get merged() {
-        let result = [];
-        let lhses = util.Array.uniq(
-            Array.from(values(this.abbrevs))
-                 .reduce((abbrevs, mabbrev) => [...abbrevs, ...Object.keys(mabbrev)], [])
-        );
-
-        for (let lhs of lhses) {
-            let exists = {};
-            for (let [, mabbrevs] in Iterator(this.abbrevs)) {
-                let abbr = mabbrevs[lhs];
-                if (abbr && !exists[abbr.rhs]) {
-                    exists[abbr.rhs] = 1;
-                    result.push(abbr);
-                }
-            }
-        }
-
-        return result;
+        return [...new Set(Object.values(this.abbrevs).map(mabbrevs=>Object.values(mabbrevs)).flat())]
     },
 
     /**
