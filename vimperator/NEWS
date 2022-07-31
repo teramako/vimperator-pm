@@ -2,6 +2,7 @@
     * for Pale Moon 31.0
     * remove tabgroup feature
     * add new feature :dialog browserconsole opens the Browser Console.
+    * add `:smile` command
 
 201x-xx-xx:
     * add option 'newtaburl' to set default URL in new tabs
